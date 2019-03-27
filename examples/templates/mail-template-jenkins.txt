@@ -1,0 +1,17 @@
+#################################################################
+# SUMMARY
+#################################################################
+Console: $urlprefix/$timestamp/console
+Report: $urlprefix/ws/results/$timestamp/cucumber_report/cucumber_report.html
+Logs: $urlprefix/ws/results/$timestamp/spacewalk-debug.tar.bz2
+ 
+#################################################################
+# SCENARIOS
+#################################################################
+Total: $tests
+Passed: $passed
+Failed: $failures
+Errors: $errors
+Skipped: $skipped
+
+$failures_log
