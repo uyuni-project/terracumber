@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+"""CLI tool to use terracumber"""
 import argparse
 import datetime
 import os
@@ -14,100 +14,178 @@ import terracumber.mailer
 import terracumber.utils
 
 
-parser = argparse.ArgumentParser(description='Run terrafrom and cucumber')
-parser.add_argument('--tf', help='Path to main.tf file', required=True)
-parser.add_argument('--gitrepo', help='URL to the git repository containing terraform definitions', default='https://github.com/uyuni-project/sumaform.git')
-parser.add_argument('--gitref', help='Git reference to be used', default='refs/heads/master')
-parser.add_argument('--gitfolder', help='Folder to store the git clone', default='/tmp/sumaform')
-parser.add_argument('--gituser', help='GitHub user', default=None)
-parser.add_argument('--gitpassword', help='GitHub password', default=None)
-parser.add_argument('--logfile', help='File to store the log', default='/tmp/sumaform.log')
-parser.add_argument('--outputdir', help='Folder to store the cucumber outputs', default='/tmp/sumaform_outputs')
-parser.add_argument('--taint', help='The list of resource types (comma separated) to taint before provisioning the environment. If not present, the whole environment will be destroyed and reprovisioned. Example: domain,main_disk', default=False)
-parser.add_argument('--init', help='Initialize terraform (required during the first run or if new modules were added)', action='store_true')
-parser.add_argument('--nlines', help='Number of lines to be attached to the email if errors are found (either lines from the log, or failed tests from cucumber', default=50)
-args = parser.parse_args()
+def parse_args():
+    """Parse arguments"""
+    parser = argparse.ArgumentParser(description='Run terrafrom and cucumber')
+    parser.add_argument('--tf', help='Path to main.tf file', required=True)
+    parser.add_argument('--gitrepo',
+                        help='URL to the git repository containing terraform definitions',
+                        default='https://github.com/uyuni-project/sumaform.git')
+    parser.add_argument('--gitref', help='Git reference to be used',
+                        default='refs/heads/master')
+    parser.add_argument(
+        '--gitfolder', help='Folder to store the git clone', default='/tmp/sumaform')
+    parser.add_argument('--gituser', help='GitHub user', default=None)
+    parser.add_argument('--gitpassword', help='GitHub password', default=None)
+    parser.add_argument('--logfile', help='File to store the log',
+                        default='/tmp/sumaform.log')
+    parser.add_argument('--outputdir', help='Folder to store the cucumber outputs',
+                        default='/tmp/sumaform_outputs')
+    parser.add_argument('--taint', help="""The list of resource types (comma separated) to taint
+                                           before provisioning the environment. If not present, the
+                                           whole environment will be destroyed and reprovisioned.
+                                           Example: domain,main_disk""", default=False)
+    parser.add_argument(
+        '--init', help="""Initialize terraform (required during the first run or if new module
+                          were added)""", action='store_true')
+    parser.add_argument(
+        '--nlines', help="""Number of lines to be attached to the email if errors are found
+                            (either lines from the log, or failed tests from cucumber""",
+        default=50)
+    args = parser.parse_args()
+    if args.taint:
+        args.taint = args.taint.split(',')
+    return args
 
-config = terracumber.config.read_config(args.tf)
-for required in ['URL_PREFIX', 'CUCUMBER_COMMAND', 'CUCUMBER_BRANCH', 'CUCUMBER_RESULTS', 'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL', 'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
-    if required not in config:
-        print("ERROR: variable %s doesnot exist at %s and is mandatory!" % (required, args.tf))
+def read_config(tf_file):
+    """Read and validate the config from a tf file"""
+    config = terracumber.config.read_config(tf_file)
+    for required in ['URL_PREFIX', 'CUCUMBER_COMMAND', 'CUCUMBER_BRANCH', 'CUCUMBER_RESULTS',
+                     'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
+                     'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
+        if required not in config:
+            print("ERROR: variable %s doesnot exist at %s and is mandatory!" %
+                  (required, tf_file))
+            sys.exit(1)
+    return config
+
+def get_tf_vars():
+    """Create a ditctionary with all TF_VAR_* environment variables"""
+    tf_vars = {}
+    for key, value in os.environ.items():
+        if re.match('^TF_VAR_.*$', key):
+            tf_vars[key] = value
+    return tf_vars
+
+def get_timestamp():
+    """Get BUILD_NUMBER on Jenkins or a timestamp otherwise"""
+    if 'BUILD_NUMBER' in os.environ:
+        return os.environ['BUILD_NUMBER']
+    return datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
+
+def create_outputdir(outputdir, timestamp):
+    """Create an outputdir with a timestamp"""
+    if not os.path.isdir(outputdir):
+        print("ERROR: %s folder does not exist" %outputdir)
+        sys.exit(1)
+    outputdir = '%s/%s/' % (outputdir.rstrip('/'), timestamp)
+    os.mkdir(outputdir)
+    return outputdir
+
+def get_git_credentials(args, tf_vars):
+    """Create a dictionary with user and password from arguments, if present or from TF_VAR_*
+       environment variables otherwise"""
+    if args.gituser:
+        return {'user': args.gituser, 'password': args.gitpassword}
+    elif 'TF_VAR_GIT_USER' in tf_vars:
+        return {'user': tf_vars['TF_VAR_GIT_USER'], 'password': tf_vars['TF_VAR_GIT_USER']}
+    return {'user': None, 'password': None}
+
+def run_terraform(args, tf_vars):
+    """ Prepare the environment """
+    terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf, tf_vars, args.logfile)
+    if args.init:
+        terraform.init()
+    if args.taint:
+        terraform.taint(args.taint)
+    else:
+        terraform.destroy()
+    result = terraform.apply()
+    if result == 0:
+        return terraform.get_hostname('root.ctl.controller')
+    return None
+
+def main():
+    """Main function"""
+    args = parse_args()
+    template_data = {}
+    template_data['timestamp'] = get_timestamp()
+    args.outputdir = create_outputdir(args.outputdir, template_data['timestamp'])
+    config = read_config(args.tf)
+    tf_vars = get_tf_vars()
+    git_creds = get_git_credentials(args, tf_vars)
+    results = {}
+
+    print("Cloning/Updating repository to/at %s..." % args.gitfolder)
+    terracumber.git.Git(args.gitrepo, args.gitref, args.gitfolder, auth=git_creds, auto=True)
+
+    print("Running terraform...")
+    results['terraform'] = run_terraform(args, tf_vars)
+
+    # Only if terraform was successful
+    if results['terraform']:
+        print("Running cucumber...")
+        # Pending: Make credentials and port configurable, and allow keypairs usage both from file
+        # and agent (already supported by terraform.cucumber)
+        cucumber = terracumber.cucumber.Cucumber({'hostname': results['terraform'], 'username': 'root',
+                                                  'port': '22', 'password': 'linux'}, False,
+                                                 'AutoAddPolicy')
+        results['cucumber'] = cucumber.run_command(config['CUCUMBER_COMMAND'], tf_vars,
+                                                   output_file=args.logfile)
+
+        print("Fetching files from controller to %s..." % args.outputdir)
+        # Pending: Make the lists of files and directories part of the tf file
+        files = ['output.html', 'output.json', 'spacewalk-debug.tar.bz2']
+        directories = ['screenshots', 'cucumber_report', 'results_junit']
+        for copyfile in files:
+            try:
+                cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], copyfile),
+                             '%s/%s' % (args.outputdir, copyfile))
+            except FileNotFoundError:
+                print("Remote file %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
+                                                            copyfile))
+
+        for copydir in directories:
+            try:
+                cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
+                                       '%s/%s' % (args.outputdir, copydir))
+            except FileNotFoundError:
+                print("Remote directory %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
+                                                                 copydir))
+
+        print("Fetching junit results and preparing template...")
+        junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
+        template_data = terracumber.utils.merge_two_dicts(template_data, junit.get_totals())
+        template_data['failures_log'] = 'FAILURES'
+        if args.nlines > -1:
+            template_data['failures_log'] += ' (showing only %s):\n' % args.nlines
+        else:
+            template_data['failures_log'] += ':\n'
+        template_data['failures_log'] += '\n'.join(junit.get_failures(args.nlines))
+        template_data['urlprefix'] = config['URL_PREFIX']
+    if results['terraform']:
+        template = config['MAIL_TEMPLATE']
+        subject = config['MAIL_SUBJECT']
+        if results['cucumber'] == 0:
+            template_data['status'] = "PASSED"
+        else:
+            template_data['status'] = "FAILED"
+    else:
+        template = config['MAIL_TEMPLATE_ENV_FAIL']
+        subject = config['MAIL_SUBJECT_ENV_FAIL']
+    # The template is relative to the tf path
+    template = "%s/%s" % (os.path.dirname(os.path.abspath(args.tf)), template)
+
+    print("Sending email...")
+    mail = terracumber.mailer.Mailer(template, config['MAIL_FROM'], config['MAIL_TO'], subject,
+                                     template_data)
+    mail.send_email()
+
+    if results['terraform'] != 0 or results['cucucmber'] != 0:
         sys.exit(1)
 
-template_data = {}
 
-tf_vars = {}
-for k, v in os.environ.items():
-    if re.match('^TF_VAR_.*$', k):
-        tf_vars[k] = v
-
-if not os.path.isdir(args.outputdir):
-    print("ERROR: %s folder does not exist" %args.outputdir)
-    sys.exit(1)
-
-if 'BUILD_NUMBER' in os.environ:
-    template_data['timestamp'] = os.environ['BUILD_NUMBER']
-else:
-    template_data['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') 
-args.outputdir = '%s/%s/' %(args.outputdir.rstrip('/'), template_data['timestamp'])
-os.mkdir(args.outputdir)
-
-git_creds = { 'user': None, 'password': None }
-if args.gituser:
-    git_creds = { 'user': args.gituser, 'password': args.gitpassword }
-else:
-    if 'TF_VAR_GIT_USER' in tf_vars:
-        git_creds = { 'user': tf_vars['TF_VAR_GIT_USER'], 'password': tf_vars['TF_VAR_GIT_USER'] }
-
-if args.taint:
-    args.taint = args.taint.split(',')
-    destroy = False
-else:
-    destroy = True
-
-print("Cloning/Updating repository to/at %s..." % args.gitfolder)
-terracumber.git.Git(args.gitrepo, args.gitref, args.gitfolder, user_password = git_creds)
-
-print("Running terraform...")
-terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf, tf_vars, args.init, destroy, args.taint, args.logfile)
-terraform_result = terraform.apply()
-
-if terraform_result == 0:
-    ctl_hostname = terraform.get_hostname('root.ctl.controller')
-    print("Running cucumber...")
-    # Pending: Make credentials and port configurable, and allow keypairs usage both from file and agent (already supported by terraform.cucumber)
-    cucumber = terracumber.cucumber.Cucumber({'hostname': ctl_hostname, 'username': 'root', 'port': '22', 'password': 'linux'}, False, 'AutoAddPolicy')
-    cucumber_result = cucumber.run_command(config['CUCUMBER_COMMAND'], output_file=args.logfile)
-    print("Fetching files from controller to %s..." % args.outputdir)
-    cucumber.get('%s/output.html' % config['CUCUMBER_RESULTS'], '%s/output.html' % args.outputdir)
-    cucumber.get('%s/output.json' % config['CUCUMBER_RESULTS'], '%s/output.json' % args.outputdir)
-    cucumber.get_recursive('%s/screenshots' % config['CUCUMBER_RESULTS'], '%s/screenshots' % args.outputdir)
-    cucumber.get_recursive('%s/cucumber_report' % config['CUCUMBER_RESULTS'], '%s/cucumber_report' % args.outputdir)
-    cucumber.get_recursive('%s/results_junit' % config['CUCUMBER_RESULTS'], '%s/results_junit' % args.outputdir)
-    cucumber.get('%s/spacewalk-debug.tar.bz2' % config['CUCUMBER_RESULTS'], '%s/spacewalk-debug.tar.bz2' % args.outputdir)
-    print("Fetching junit results and preparing template...")
-    junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
-    template_data = terracumber.utils.merge_two_dicts(template_data, junit.get_totals())
-    if args.nlines > -1: limit = ' (showing only %s)' % args.nlines
-    template_data['failures_log'] = 'FAILURES%s:\n%s' % (limit, '\n'.join(junit.get_failures(args.nlines)))
-    template_data['urlprefix'] = config['URL_PREFIX']
-
-if terraform_result == 0:
-    template = config['MAIL_TEMPLATE']
-    subject = config['MAIL_SUBJECT']
-    if cucumber_result == 0:
-        template_data['status'] = "PASSED"
-    else:
-        template_data['status'] = "FAILED"
-else:
-    template = config['MAIL_TEMPLATE_ENV_FAIL']
-    subject = config['MAIL_SUBJECT_ENV_FAIL']
-# The template is relative to the tf path
-template = "%s/%s" % (os.path.dirname(os.path.abspath(args.tf)), template)
-
-print("Sending email...")
-mail = terracumber.mailer.Mailer(template, config['MAIL_FROM'], config['MAIL_TO'], subject, template_data)
-
-if terraform_result != 0 or cucumber_result != 0:
-    sys.exit(1)
-sys.exit(0)
+if __name__ == '__main__':
+    main()
+    sys.exit(0)

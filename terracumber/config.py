@@ -1,11 +1,14 @@
+"""Manage HCL files as configuration files"""
 import hcl
 
+
 def read_config(path):
+    """Return a dictionary with all the variables from a HCL file"""
     config = {}
-    with open(path, 'r') as f:
-        for k,v in hcl.load(f)['variable'].items():
+    with open(path, 'r') as cfg:
+        for key, value in hcl.load(cfg)['variable'].items():
             try:
-                config[k] = v['default']
+                config[key] = value['default']
             except KeyError:
                 pass
-    return(config)
+    return config

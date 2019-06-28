@@ -1,43 +1,43 @@
+"""Extract data from junit output XML files"""
 from glob import glob
 from xml.dom import minidom
 
-class Junit:
-    ''' The junit class extracts data from junit output XML files.
 
-    :param path: The path where junit XML files are.
-    '''
+class Junit:
+    """The junit class extracts data from junit output XML files"""
     def __init__(self, path):
         self.path = path
 
     def get_totals(self):
-        ''' Get the totals for all the parsed junit output XML files.
-        :returns: A dictionary with the elements: failures, errors, skipped, tests, time. All integers except time, that is a real.
-        :rtype: dict
-        '''
-        t = { 'failures': 0, 'errors': 0, 'skipped': 0, 'tests': 0, 'time': 0 }
-        for f in glob(self.path):
-            testsuites = minidom.parse(f).getElementsByTagName('testsuite')
+        """Get the totals for all tests at the parsed junit output XML files
+
+        Returns a dictionary with the elements: failures, errors, skipped, tests, time.
+        All integers except time, that is a real.
+        """
+        res = {'failures': 0, 'errors': 0, 'skipped': 0, 'tests': 0, 'time': 0}
+        for tfile in glob(self.path):
+            testsuites = minidom.parse(tfile).getElementsByTagName('testsuite')
             for testsuite in testsuites:
-                t['failures'] += int(testsuite.attributes['failures'].value)
-                t['errors'] += int(testsuite.attributes['errors'].value)
-                t['skipped'] += int(testsuite.attributes['skipped'].value)
-                t['tests'] += int(testsuite.attributes['tests'].value)
-                t['time'] += float(testsuite.attributes['time'].value)
-        t['passed'] = t['tests'] - t['failures'] - t['errors'] - t['skipped']
-        return(t)
+                res['failures'] += int(testsuite.attributes['failures'].value)
+                res['errors'] += int(testsuite.attributes['errors'].value)
+                res['skipped'] += int(testsuite.attributes['skipped'].value)
+                res['tests'] += int(testsuite.attributes['tests'].value)
+                res['time'] += float(testsuite.attributes['time'].value)
+        res['passed'] = res['tests'] - res['failures'] - res['errors'] - res['skipped']
+        return res
 
     def get_failures(self, number=-1):
-        ''' Return failure messages for failed tests.
-        :param number: The maximum number of messages to return, -1 for all messages
-        :returns: A list with the failure messages
-        :rtype: list
-        '''
+        """Return a list of failure messages for failed tests.
+
+        Keyword arguments:
+        number: The maximum number of messages to return, -1 for all messages
+        """
         failures = []
-        for f in glob(self.path):
-            j_failures = minidom.parse(f).getElementsByTagName('failure')
+        for tfile in glob(self.path):
+            j_failures = minidom.parse(tfile).getElementsByTagName('failure')
             for j_failure in j_failures:
                 if len(failures) <= number:
                     failures.append(j_failure.attributes['message'].value)
                 else:
                     break
-        return(failures)
+        return failures

@@ -1,38 +1,41 @@
+"""Manages sending email templates"""
 import smtplib
 from email.mime.text import MIMEText
 from string import Template
 
-class Mailer():
-    ''' The Mailer class is used to send emails.
 
-    :param template: The path where the email template is.
-    :param from_addr: email address for From:
-    :param to_addr: email address for To:
-    :param subject: subject for the email
-    :param variables: The dictonary with the variables for the template
-    '''
+class Mailer():
+    """The Mailer class is used to send emails
+
+    Keyword arguments:
+    template - A string with the path where the email template is.
+    from_addr - A string with the email address for From:
+    to_addr - A string with the email address for To: (can include variables for templating)
+    subject - A string with subject for the email
+    variables - A dictonary with the variables for the template
+    """
+
     def __init__(self, template, from_addr, to_addr, subject, variables):
         self.template = template
         self.from_addr = from_addr
         self.to_addr = to_addr
         self.subject = subject
+        self.msg = None
         self.variables = variables
-        self.__send_email()
+        self.fill_template()
 
+    def fill_template(self):
+        """ Fill message and subject templates from a file with variables """
+        with open(self.template, 'r') as template:
+            self.msg = MIMEText(Template(template.read()).safe_substitute(self.variables))
+        self.subject = Template(self.subject).safe_substitute(self.variables)
+        return self.subject, self.msg
 
-    def __send_email(self):
-        ''' Sends an email using the template '''
-        with open(self.template, 'r') as f:
-            self.msg = MIMEText(self.__fill_template(f.read()))
-        self.subject = self.__fill_template(self.subject)
+    def send_email(self):
+        ''' Sends an email '''
         self.msg['Subject'] = self.subject
         self.msg['From'] = self.from_addr
         self.msg['To'] = self.to_addr
-        s = smtplib.SMTP('localhost')
-        s.send_message(self.msg)
-        s.quit()
-
-
-    def __fill_template(self, text):
-        text = Template(text)
-        return(text.safe_substitute(self.variables))
+        conn = smtplib.SMTP('localhost')
+        conn.send_message(self.msg)
+        conn.quit()
