@@ -14,7 +14,6 @@ No. It should work with any other environment as long as:
 2. It has a controller instance (defined as root.ct.controller at terraform) to run the cucumber testsuite.
 3. The cucumber run produces the following outputs: `cucumber_report`, `results_junit`, `screenshots` (as such outputs are to be published) **[1]**
 
-
 **[1]** We hope to make this configurable in the future.
 
 # How should I use it?
@@ -48,3 +47,7 @@ The email templates are plain text files with some variables to be replaced by `
 * `$errors` - Number of tests executed by cucumber with errors
 * `$skipped` - Number of tests skipped by cucumber
 * `$failures_log` - A list of failed tests, the number of failures is determined by `terraform-cli` `--nlines` parameter
+
+# Bonus: clean old results
+
+The script `clean-results` can be used to get rid of undesired old results (use `-h` to get help) 

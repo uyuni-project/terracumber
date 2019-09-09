@@ -1,0 +1,89 @@
+#!/bin/bash
+SCRIPT=$(basename ${0})
+BASE_DIR=$(dirname "${0}")
+
+function print_incorrect_syntax() {
+  echo "ERROR: Invalid usage options (use -h for help)"
+}
+
+function usage() {
+    cat <<EOF
+Clean old terracumber results.
+
+Syntax:
+
+${SCRIPT} <ARGUMENTS>
+
+Mandatory arguments:
+
+  -r, --results_path=<PATH>  Path to the terracumber results (can't be /)
+
+Optional arguments:
+
+  -s, --save=<NUMBER>        The number of newest results to be saved
+                             (10 by default)
+  -v, --verbose              If present, show results folders that are
+                             removed
+EOF
+}
+
+function is_number() {
+  local re='^[0-9]+$'
+  if ! [[ ${1} =~ $re ]] ; then
+    echo "false"
+  fi
+  echo "true"
+}
+
+function remove_results() {
+  local RESULTS_PATH="${1}/*"
+  local SAVE=${2}
+  local VERBOSE="${3}"
+  TOTAL=$(ls -tld ${RESULTS_PATH} | wc -l)
+  if [ ${TOTAL} -gt ${SAVE} ]; then
+    echo "There are more than ${SAVE} result folders, removing all except the ${SAVE} newest..."
+    for RESULT in $(ls -td ${RESULTS_PATH} | tail -n +$((${SAVE}+1))); do
+      if [ "${VERBOSE}" == "true" ]; then
+        echo "Removing ${RESULT}..."
+      fi
+      rm -rf ${RESULT}
+    done
+  else
+    echo "There are less than ${SAVE} result folders"
+  fi
+}
+
+# read the options
+ARGS=$(getopt -o h,r:,s:,v --long help,results_path:,save:,verbose -n "${SCRIPT}" -- "$@")
+if [ $? -ne 0 ];
+then
+  print_incorrect_syntax
+  exit 1
+fi
+eval set -- "${ARGS}"
+while true ; do
+  case "${1}" in
+    -h|--help)         usage; exit 1;;
+    -r|--results_path) RESULTS_PATH="$(echo ${2}|sed 's:/*$::')"; shift 2;;
+    -s|--save)         SAVE="${2}"; shift 2 ;;
+    -v|--verbose)      VERBOSE="true"; shift 1 ;;
+    --)                shift ; break ;;
+    *)                 print_incorrect_syntax; exit 1;;
+  esac
+done
+
+if [ "${SAVE}" == "" ]; then
+  SAVE=10
+fi
+
+if [ "${RESULTS_PATH}" == "" -o "$(is_number ${SAVE})" != "true" ]; then
+  print_incorrect_syntax
+  exit 1
+fi
+
+if [ ! -d ${RESULTS_PATH} ]; then
+  echo "Directory ${RESULTS_PATH} does not exist!"
+  exit 1
+fi
+
+remove_results ${RESULTS_PATH} ${SAVE} ${VERBOSE}
