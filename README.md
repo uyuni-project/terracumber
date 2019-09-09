@@ -21,7 +21,9 @@ No. It should work with any other environment as long as:
 ## Software requirements
 
 - Python3
+- [pyhcl](https://pypi.org/project/pyhcl/) module installed
 - Terraform installed and configured as need to run the terrafrom teplates you are going to use
+- 
 
 ## Create/adjust your .tf file
 
