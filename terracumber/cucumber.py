@@ -1,5 +1,6 @@
 """Manage execution and outputs of cucumber at a controler node"""
 import os
+import re
 import stat
 import paramiko
 
@@ -52,13 +53,33 @@ class Cucumber:
         return chan.recv_exit_status()
 
     def get(self, remotepath, localpath):
-        """Get a file from the controller"""
+        """Get a files from the controller
+
+        Keyword arguments:
+        remotepath - A string with the full remote path. The filename part can be a REGEX
+        localpath - A string with the local path to the folder where data is to be copied
+        """
+        match = False
         sftp_client = self.ssh_client.open_sftp()
-        sftp_client.get(remotepath, localpath)
+        path = remotepath.rsplit('/', 1)[0]
+        filename = remotepath.rsplit('/', 1)[1]
+        files = sftp_client.listdir(path)
+        for fname in files:
+            if re.match("^%s$" %filename, fname):
+                match = True
+                sftp_client.get(path + '/' + fname, localpath + '/' + fname)
+        if not match:
+            raise FileNotFoundError
 
     # Credit goes to https://stackoverflow.com/a/50130813
     def get_recursive(self, remotedir, localdir, sftp_client=None):
-        """Get a directory (recursively) from the controller)"""
+        """Get a directory (recursively) from the controller)
+
+        Keyword arguments:
+        remotedir - A string with the path for the remote dir to be copied
+        localdir - A string with the path for the local dir, including
+                   the directory to be copied
+        """
         sftp_client = self.ssh_client.open_sftp()
         if not os.path.isdir(localdir):
             os.mkdir(localdir)

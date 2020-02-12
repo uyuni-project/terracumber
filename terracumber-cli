@@ -32,11 +32,11 @@ def parse_args():
     parser.add_argument('--logfile', help='File to store the log', default='/tmp/sumaform.log')
     parser.add_argument('--outputdir', help='Folder to store the cucumber outputs',
                         default='/tmp/sumaform_outputs')
-    parser.add_argument('--taint', help="""The list of resource types (comma separated) to taint
-                                           before provisioning the environment. If not present, the
-                                           whole environment will be destroyed and reprovisioned.
+    parser.add_argument('--taint', help="""A regex with the resources to taint before provisioning
+                                           the environment. If not present, the whole environment
+                                           will be destroyed and reprovisioned.
                                            Valid when using --runall or --runstep provision.
-                                           Example: domain,main_disk""", 
+                                           Example: '.*(domain|main_disk).*'""",
                         default=False)
     parser.add_argument('--init', help="""Initialize terraform (required during the first run or if
                                           new module were added). Valid when using --runall or
@@ -61,20 +61,24 @@ def parse_args():
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
                         dest='cucumber_cmd', default=False)
+    # I think this is sumaform specific, in the future we should
+    parser.add_argument('--sumaform-backend', help="""sumaform backend to be used. Only valid when using
+                                                      sumaformn. Possible values are libvirt, aws or null.
+                                                      libvirt is used by default""",
+                                                      choices=['libvirt', 'aws', 'null'], default="libvirt",
+                                                      dest='sumaform_backend')
     args = parser.parse_args()
-    if args.runall:
-        pass
-    elif args.runstep:
+    if args.runstep:
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
             print("--runstep cucumber requires --cucumber-cmd")
             return False
+        if not os.environ['BUILD_TIMESTAMP'] and not os.environ['BUILD_NUMBER']:
+            print("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
     elif args.runall:
         pass
     else:
         print("Either --runall or --runstep must be used")
         return False
-    if args.taint:
-        args.taint = args.taint.split(',')
     return args
 
 def read_config(tf_file):
@@ -106,7 +110,7 @@ def get_timestamp(args):
     if args.runstep:
         if 'BUILD_TIMESTAMP' in os.environ:
             return os.environ['BUILD_TIMESTAMP']
-    return False
+    return datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
 
 def create_outputdir(outputdir, timestamp):
@@ -115,8 +119,11 @@ def create_outputdir(outputdir, timestamp):
         print("ERROR: %s folder does not exist" %outputdir)
         return False
     outputdir = '%s/%s/' % (outputdir.rstrip('/'), timestamp)
-    os.mkdir(outputdir)
-    return outputdir
+    existed = True
+    if not os.path.isdir(outputdir):
+        existed = False
+        os.mkdir(outputdir)
+    return outputdir, existed
 
 def get_git_credentials(args, tf_vars):
     """Create a dictionary with user and password from arguments, if present or from TF_VAR_*
@@ -129,7 +136,9 @@ def get_git_credentials(args, tf_vars):
 
 def run_terraform(args, tf_vars):
     """ Prepare the environment """
-    terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf, tf_vars, args.logfile)
+    terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf,
+                                                    args.sumaform_backend, tf_vars,
+                                                    args.logfile)
     if args.init:
         terraform.init()
     if args.taint:
@@ -144,7 +153,7 @@ def run_terraform(args, tf_vars):
 def get_controller_hostname(args, tf_vars):
     """ Get controller hostbame """
     terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf, tf_vars, args.logfile)
-    return terraform.get_hostname('root.ctl.controller')
+    return terraform.get_hostname('ctl')
 
 def get_results(args, tf_vars, config, ctl_creds):
     """ Get results from the controller after a cucumber execution """
@@ -152,15 +161,15 @@ def get_results(args, tf_vars, config, ctl_creds):
     ctl_creds['hostname'] = ctl
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
     # Pending: Make the lists of files and directories part of the tf file
-    files = ['output.html', 'output.json', 'spacewalk-debug.tar.bz2']
-    directories = ['screenshots', 'cucumber_report', 'results_junit']
+    files = ['output.*\.html', 'output.*\.json', 'spacewalk-debug\.tar\.bz2']
+    directories = ['screenshots', 'cucumber_report', 'logs', 'results_junit']
     for copyfile in files:
         try:
             cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], copyfile),
-                         '%s/%s' % (args.outputdir, copyfile))
+                         '%s' % args.outputdir)
         except FileNotFoundError:
-            print("Remote file %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
-                                                        copyfile))
+            print("Nothing matched %s/%s at %s!" % (config['CUCUMBER_RESULTS'],
+                                                    copyfile, ctl_creds['hostname']))
     for copydir in directories:
         try:
             cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
@@ -172,7 +181,7 @@ def get_results(args, tf_vars, config, ctl_creds):
 
 def send_mail(args, config, template_data=None, cucumber=None):
     """ Send email with the results """
-    if cucumber is not None:
+    if cucumber is not None or os.listdir(args.outputdir):
         junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
         template_data = terracumber.utils.merge_two_dicts(template_data, junit.get_totals())
         template_data['failures_log'] = 'FAILURES'
@@ -219,9 +228,9 @@ def main():
         sys.exit(1)
     template_data = {}
     template_data['timestamp'] = get_timestamp(args)
-    args.outputdir = create_outputdir(args.outputdir, template_data['timestamp'])
-    if not args.outputdir:
-        sys.exit(1)
+    (args.outputdir, dir_existed) = create_outputdir(args.outputdir, template_data['timestamp'])
+    if args.runall and dir_existed:
+        print("WARNING: %s directory already exists!" %args.outputdir)
     config = read_config(args.tf)
     if not config:
         sys.exit(1)
@@ -238,21 +247,22 @@ def main():
         try:
             terracumber.git.Git(args.gitrepo, args.gitref, args.gitfolder, auth=git_creds, auto=True)
             results['git'] = True
-        except:
+        except Exception as e:
+            print("ERROR: %s" % e)
             results['git'] = False
 
     if args.runall or args.runstep == 'provision':
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
-    # Only if terraform was successful
+    # Only if terraform was successful or step cucumber is called
     if (args.runall and results['terraform']) or args.runstep == 'cucumber':
         print("Running command...")
         if args.cucumber_cmd:
             cmd = args.cucumber_cmd
         else:
             cmd = config['CUCUMBER_COMMAND']
-        results['cucumber'] = cucumber_run(args, tf_vars, cmd, ctl_creds)
+        results['cucumber'] = cucumber_run(args, tf_vars, ctl_creds, cmd)
 
     if (args.runall and results['cucumber']) or args.runstep == 'getresults':
         print("Fetching files from controller to %s..." % args.outputdir)

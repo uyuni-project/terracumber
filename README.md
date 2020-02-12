@@ -11,8 +11,17 @@ Until [SUSE's Hackweek 18](https://hackweek.suse.com/projects/terracumber-python
 No. It should work with any other environment as long as:
 
 1. It is created with terraform.
-2. It has a controller instance (defined as root.ct.controller at terraform) to run the cucumber testsuite.
-3. The cucumber run produces the following outputs: `cucumber_report`, `results_junit`, `screenshots` (as such outputs are to be published) **[1]**
+2. The terraform has an structure similar to [sumaform](https://github.com/uyuni-project/sumaform), with several backends, and and output 'root' that contains the 'hostname' in the same way sumaform does.
+3. The cucumber run produces one or more of the following outputs **[1]**:
+   * Files:
+     - `output*.html`
+     - `output*.json` 
+     - `spacewalk-debug.tar.bz2`
+   * Directories:
+     - `screenshots`
+     - `cucumber_report`
+     - `logs`
+     - `results_junit`
 
 **[1]** We hope to make this configurable in the future.
 
@@ -23,9 +32,15 @@ No. It should work with any other environment as long as:
 - Python3
 - [pyhcl](https://pypi.org/project/pyhcl/) module installed
 - Terraform installed and configured as need to run the terrafrom teplates you are going to use
-- 
 
-## Create/adjust your .tf file
+## Quickstart
+
+See [EXAMPLE.md](EXAMPLE.md) for a quick intro about the calls to `terraform-cli` 
+
+
+## Advanced usage
+
+### Create/adjust your .tf file
 
 You will need to create at least one `.tf` file to use it to launch your environment, as well as configuring everything else (such as what command to run for the testsuite).
 
@@ -35,7 +50,7 @@ Keep in mind:
 
 **[1]** To clone your terraform repository, it is allowed to use `TF_VAR_GIT_USER` and `TF_VAR_GIT_USER` instead of `--gituser` and `--gitpassword`, in case you do not want the credentials visible at the list of processes. If you use both the environment and the variables, then the parameters will be used to clone the terraform repository, and the variables to clone the cucumber repository at the controller.
 
-## Create email templates
+### Create email templates
 
 You need to create two email templates, one to be used when the environment fails to be created, the other to be used after cucumber is able to run.
 

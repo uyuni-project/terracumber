@@ -1,6 +1,7 @@
 """Run and manage terraform"""
 from json import load
-from os import environ, path
+from os import environ, path, symlink, unlink
+from re import match
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
@@ -11,34 +12,40 @@ class Terraformer:
     Keyword arguments:
     terraform_path - String with a path where the terraform code is
     maintf - String with the path where the main.tf file is
+    backend - suma backend to be used
     variables - Dictionary with variables to be replaced at the main.tf
     output_file - String with the path to a file to store console output to the specified file
                   (False to avoid it)
     """
 
-    def __init__(self, terraform_path, maintf, variables=None, output_file=False):
+    def __init__(self, terraform_path, maintf, backend, variables=None, output_file=False):
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
         self.output_file = output_file
         copy(maintf, terraform_path + '/main.tf')
+        # Only if we are using a folder with folder structure used by sumaform
+        if path.exists('%s/backend_modules/%s' % (terraform_path, backend)):
+            if path.exists('%s/modules/backend' % terraform_path):
+                unlink('%s/modules/backend' % terraform_path)
+            symlink('%s/backend_modules/%s' %(terraform_path, backend),
+            '%s/modules/backend' % terraform_path)
+
 
     def init(self):
         """Run terraform init"""
         return self.__run_command(["terraform", "init"])
 
     def taint(self, what):
-        """Taint the resources matching the given types
+        """Taint resources according to a retex
  
         Keywords arguments:
-        what - An array with the types to be tainted, for example: ['domain', 'main_disk']
+        what - A regex expression
         """
         resources = self.__get_resources(what)
         for resource in resources:
-            split = [value for value in resource.split('.') if value != 'module']
-            module = '.'.join(split[0:-2])
-            element = '.'.join(split[-2:])
-            self.__run_command(["terraform", "taint", "-module=%s" % module, "%s" % element])
+            print(resource)
+            self.__run_command(["terraform", "taint", "%s" % resource])
 
     def apply(self):
         """Run terraform apply"""
@@ -52,9 +59,14 @@ class Terraformer:
         """Get a hostname for an instance from the tfstate file"""
         with open(self.terraform_path + '/terraform.tfstate', 'r') as tf_state:
             j = load(tf_state)
-            for module in j['modules']:
-                if '.'.join(module['path']) == resource:
-                    return module['outputs']['configuration']['value']['hostname']
+            # This seems to be sumaform specific. I wonder if there is
+            # a way of making this generic :-(
+            value = j['outputs']['configuration']['value']
+            if resource in value.keys():
+                if 'hostnames' in value[resource].keys():
+                    return value[resource]['hostnames'][0]
+                if 'hostname' in value[resource].keys():
+                    return value[resource]['hostname']
         return None
 
     def __get_resources(self, what=None):
@@ -63,13 +75,16 @@ class Terraformer:
         """
         if not path.isfile(self.terraform_path + '/terraform.tfstate'):
             return[]
-        all_resources = self.__run_command(
-            ["terraform", "state", "list"], True)
+        # We should use the terraform.tf state file for this, but then we
+        # would need a way more complicated code, as you can't get the
+        # addresses from the file without transformations depending
+        # on the resource type.
+        all_resources = self.__run_command(["terraform", "state", "list"], True)
         if not what:
             return all_resources
         filtered_resources = []
         for resource in all_resources:
-            if resource.split('.')[-1] in what:
+            if match(what, resource):
                 filtered_resources.append(resource)
         return filtered_resources
 

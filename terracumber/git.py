@@ -43,14 +43,14 @@ class Git:
     def clone(self):
         """ Clone a repository to the specified folder """
         repo = pygit2.clone_repository(self.url, self.folder)
-        repo.checkout(self.ref)
+        repo.checkout('refs/heads/' + self.ref)
 
     def checkout(self):
         """ Checkout changes ignoring any local changes """
         repo = pygit2.Repository(pygit2.discover_repository(self.folder))
         repo.remotes['origin'].fetch()
-        remote_ref = self.ref.replace('refs/heads', 'refs/remotes/origin')
+        remote_ref = 'refs/remotes/origin/' + self.ref
         remote_id = repo.lookup_reference(remote_ref).target
-        local_id = repo.lookup_reference(self.ref)
+        local_id = repo.lookup_reference('refs/heads/' + self.ref)
         local_id.set_target(remote_id)
         repo.reset(local_id.target, pygit2.GIT_RESET_HARD)
