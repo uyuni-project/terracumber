@@ -116,7 +116,7 @@ class Terraformer:
     def __run_command_iterator(self, command):
         """Run an arbitary command locally, merge stderr to stdout and work as an interator """
         process = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=self.terraform_path,
-                        universal_newlines=True, env={**environ, **self.variables})
+                        universal_newlines=True, env=merge_two_dicts(environ, self.variables))
         for stdout_line in iter(process.stdout.readline, ""):
             yield stdout_line
         process.stdout.close()
