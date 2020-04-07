@@ -4,6 +4,7 @@ from os import environ, path, symlink, unlink
 from re import match
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
+from .utils import merge_two_dicts
 
 
 class Terraformer:
