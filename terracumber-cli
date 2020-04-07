@@ -72,7 +72,7 @@ def parse_args():
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
             print("--runstep cucumber requires --cucumber-cmd")
             return False
-        if not os.environ['BUILD_TIMESTAMP'] and not os.environ['BUILD_NUMBER']:
+        if not 'BUILD_TIMESTAMP' in os.environ and not 'BUILD_NUMBER' in os.environ:
             print("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
     elif args.runall:
         pass
