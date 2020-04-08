@@ -268,7 +268,7 @@ def main():
         print("Fetching files from controller to %s..." % args.outputdir)
         results['results'] = get_results(args, tf_vars, config, ctl_creds)
 
-    if (args.runall and results['terraform'] or results['cucumber']) or args.runstep == 'mail':
+    if args.runall or args.runstep == 'mail':
         print("Preparing and sending email")
         results['mail'] = send_mail(args, config, template_data, results['cucumber'])
 
