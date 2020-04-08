@@ -238,7 +238,7 @@ def main():
     git_creds = get_git_credentials(args, tf_vars)
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
     # and agent (already supported by terraform.cucumber)
-    ctl_creds = {'hostname': None, 'username': 'root', 'port': '22', 'password': 'linux'}
+    ctl_creds = {'hostname': None, 'username': 'root', 'port': 22, 'password': 'linux'}
     results = {}
     results = {'git': None, 'terraform': None, 'cucumber': None, 'getresults': None, 'mail': None}
 
