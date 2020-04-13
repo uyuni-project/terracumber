@@ -22,8 +22,8 @@ Optional arguments:
 
   -s, --save=<NUMBER>        The number of newest results to be saved
                              (10 by default)
-  -v, --verbose              If present, show results folders that are
-                             removed
+  -d, --dry_run              If present, show a report but do not remove
+                             anything
 EOF
 }
 
@@ -38,23 +38,29 @@ function is_number() {
 function remove_results() {
   local RESULTS_PATH="${1}/*"
   local SAVE=${2}
-  local VERBOSE="${3}"
+  local DRY_RUN=${3} 
   TOTAL=$(ls -tld ${RESULTS_PATH} | wc -l)
   if [ ${TOTAL} -gt ${SAVE} ]; then
-    echo "There are more than ${SAVE} result folders, removing all except the ${SAVE} newest..."
+    if [ "${DRY_RUN}" == "true" ]; then
+      echo "DRY RUN: There are more than ${SAVE} result folders, would remove all except the ${SAVE} newest..."
+    else
+      echo "There are more than ${SAVE} result folders, removing all except the ${SAVE} newest..."
+    fi
     for RESULT in $(ls -td ${RESULTS_PATH} | tail -n +$((${SAVE}+1))); do
-      if [ "${VERBOSE}" == "true" ]; then
+      if [ "${DRY_RUN}" == "true" ]; then
+        echo "DRY RUN: Would remove ${RESULT}"
+      else
         echo "Removing ${RESULT}..."
+        rm -rf ${RESULT}
       fi
-      rm -rf ${RESULT}
     done
   else
-    echo "There are less than ${SAVE} result folders"
+    echo "There are ${SAVE} or less result folders"
   fi
 }
 
 # read the options
-ARGS=$(getopt -o h,r:,s:,v --long help,results_path:,save:,verbose -n "${SCRIPT}" -- "$@")
+ARGS=$(getopt -o h,r:,s:,d --long help,results_path:,save:,dry_run -n "${SCRIPT}" -- "$@")
 if [ $? -ne 0 ];
 then
   print_incorrect_syntax
@@ -66,7 +72,7 @@ while true ; do
     -h|--help)         usage; exit 1;;
     -r|--results_path) RESULTS_PATH="$(echo ${2}|sed 's:/*$::')"; shift 2;;
     -s|--save)         SAVE="${2}"; shift 2 ;;
-    -v|--verbose)      VERBOSE="true"; shift 1 ;;
+    -d|--dry_run)      DRY_RUN="true"; shift 1 ;;
     --)                shift ; break ;;
     *)                 print_incorrect_syntax; exit 1;;
   esac
@@ -86,4 +92,4 @@ if [ ! -d ${RESULTS_PATH} ]; then
   exit 1
 fi
 
-remove_results ${RESULTS_PATH} ${SAVE} ${VERBOSE}
+remove_results ${RESULTS_PATH} ${SAVE} ${DRY_RUN}
