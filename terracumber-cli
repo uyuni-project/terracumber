@@ -183,10 +183,17 @@ def send_mail(args, config, template_data=None, cucumber=None):
     """ Send email with the results """
     if cucumber is not None or os.listdir(args.outputdir):
         junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
+        # For that case when we send the email as standalone step, calculate
+        # cucumber result from junit outputs
+        if cucumber is None:
+            if len(junit.get_failures(-1)) != 0:
+                cucumber = False
+            else:
+                cucumber = True
         template_data = terracumber.utils.merge_two_dicts(template_data, junit.get_totals())
         template_data['failures_log'] = 'FAILURES'
         if args.nlines > -1:
-            template_data['failures_log'] += ' (showing only %s):\n' % args.nlines
+            template_data['failures_log'] += ' (showing only up to %s):\n' % args.nlines
         else:
             template_data['failures_log'] += ':\n'
         template_data['failures_log'] += '\n'.join(junit.get_failures(args.nlines))
@@ -195,6 +202,7 @@ def send_mail(args, config, template_data=None, cucumber=None):
         subject = config['MAIL_SUBJECT']
         if cucumber:
             template_data['status'] = "PASSED"
+            template_data['failures_log'] = ''
         else:
             template_data['status'] = "FAILED"
     else:

@@ -35,6 +35,8 @@ class Junit:
         failures = []
         for tfile in glob(self.path):
             j_failures = minidom.parse(tfile).getElementsByTagName('failure')
+            if number == -1:
+                number = len(failures)
             for j_failure in j_failures:
                 if len(failures) <= number:
                     failures.append(j_failure.attributes['message'].value)
