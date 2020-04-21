@@ -181,6 +181,7 @@ def get_results(args, tf_vars, config, ctl_creds):
 
 def send_mail(args, config, template_data=None, cucumber=None):
     """ Send email with the results """
+    template_data['urlprefix'] = config['URL_PREFIX']
     if cucumber is not None or os.listdir(args.outputdir):
         junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
         # For that case when we send the email as standalone step, calculate
