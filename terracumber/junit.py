@@ -14,8 +14,10 @@ class Junit:
         Returns a dictionary with the elements: failures, errors, skipped, tests, time.
         All integers except time, that is a real.
         """
+        found = False
         res = {'failures': 0, 'errors': 0, 'skipped': 0, 'tests': 0, 'time': 0}
         for tfile in glob(self.path):
+            found = True
             testsuites = minidom.parse(tfile).getElementsByTagName('testsuite')
             for testsuite in testsuites:
                 res['failures'] += int(testsuite.attributes['failures'].value)
@@ -24,7 +26,9 @@ class Junit:
                 res['tests'] += int(testsuite.attributes['tests'].value)
                 res['time'] += float(testsuite.attributes['time'].value)
         res['passed'] = res['tests'] - res['failures'] - res['errors'] - res['skipped']
-        return res
+        if found:
+            return res
+        return None
 
     def get_failures(self, number=-1):
         """Return a list of failure messages for failed tests.
