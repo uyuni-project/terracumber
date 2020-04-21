@@ -21,7 +21,7 @@ Mandatory arguments:
 Optional arguments:
 
   -s, --save=<NUMBER>        The number of newest results to be saved
-                             (10 by default)
+                             (20 by default)
   -d, --dry_run              If present, show a report but do not remove
                              anything
 EOF
@@ -79,7 +79,7 @@ while true ; do
 done
 
 if [ "${SAVE}" == "" ]; then
-  SAVE=10
+  SAVE=20
 fi
 
 if [ "${RESULTS_PATH}" == "" -o "$(is_number ${SAVE})" != "true" ]; then
