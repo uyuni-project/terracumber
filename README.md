@@ -69,4 +69,4 @@ The email templates are plain text files with some variables to be replaced by `
 
 # Bonus: clean old results
 
-The script `clean-results` can be used to get rid of undesired old results (use `-h` to get help) 
+The script `clean-old-results` can be used to get rid of undesired old results (use `-h` to get help) 
