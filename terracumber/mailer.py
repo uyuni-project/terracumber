@@ -27,7 +27,8 @@ class Mailer():
     def fill_template(self):
         """ Fill message and subject templates from a file with variables """
         with open(self.template, 'r') as template:
-            self.msg = MIMEText(Template(template.read()).safe_substitute(self.variables))
+            self.msg = MIMEText(
+                Template(template.read()).safe_substitute(self.variables))
         self.subject = Template(self.subject).safe_substitute(self.variables)
         return self.subject, self.msg
 

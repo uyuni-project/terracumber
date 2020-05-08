@@ -5,6 +5,7 @@ from xml.dom import minidom
 
 class Junit:
     """The junit class extracts data from junit output XML files"""
+
     def __init__(self, path):
         self.path = path
 
@@ -25,7 +26,8 @@ class Junit:
                 res['skipped'] += int(testsuite.attributes['skipped'].value)
                 res['tests'] += int(testsuite.attributes['tests'].value)
                 res['time'] += float(testsuite.attributes['time'].value)
-        res['passed'] = res['tests'] - res['failures'] - res['errors'] - res['skipped']
+        res['passed'] = res['tests'] - res['failures'] - \
+            res['errors'] - res['skipped']
         if found:
             return res
         return None

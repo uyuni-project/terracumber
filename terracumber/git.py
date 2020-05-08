@@ -19,6 +19,7 @@ class Git:
     If neither ssh_key or user_password are provided, the class will try to use a Key pair from
     a SSH agent
     """
+
     def __init__(self, url, ref, folder, auth=None, auto=False):
         self.url = url
         self.ref = ref
@@ -56,7 +57,8 @@ class Git:
                 create_remote = False
                 break
         if create_remote:
-            remote = self.url.replace('/','-').replace('.','-').replace(':','-')
+            remote = self.url.replace(
+                '/', '-').replace('.', '-').replace(':', '-')
             repo.remotes.create(remote, self.url)
         remote_url = repo.remotes[remote].url
         # Fetch from the remote
@@ -67,7 +69,8 @@ class Git:
         try:
             remote_id = repo.lookup_reference(remote_ref).target
         except KeyError:
-            raise KeyError ("Could not find reference %s (remote URL %s)" % (remote_ref, remote_url))
+            raise KeyError("Could not find reference %s (remote URL %s)" % (
+                remote_ref, remote_url))
         # Calculate local references and checkout
         local_ref = 'refs/heads/' + self.ref
         print("Checking out %s..." % local_ref)

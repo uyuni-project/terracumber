@@ -15,6 +15,7 @@ class Cucumber:
     MissingHostKeyPolicy - AutoAddPolicy or RejectPolicy strings
                            (http://docs.paramiko.org/en/2.4/api/client.html#paramiko.client.SSHClient)
     """
+
     def __init__(self, conn_data, load_system_host_keys=True, MissingHostKeyPolicy=None):
         self.conn_data = conn_data
         self.ssh_client = paramiko.SSHClient()
@@ -65,7 +66,7 @@ class Cucumber:
         filename = remotepath.rsplit('/', 1)[1]
         files = sftp_client.listdir(path)
         for fname in files:
-            if re.match("^%s$" %filename, fname):
+            if re.match("^%s$" % filename, fname):
                 match = True
                 sftp_client.get(path + '/' + fname, localpath + '/' + fname)
         if not match:

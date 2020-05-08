@@ -29,9 +29,8 @@ class Terraformer:
         if path.exists('%s/backend_modules/%s' % (terraform_path, backend)):
             if path.exists('%s/modules/backend' % terraform_path):
                 unlink('%s/modules/backend' % terraform_path)
-            symlink('%s/backend_modules/%s' %(terraform_path, backend),
-            '%s/modules/backend' % terraform_path)
-
+            symlink('%s/backend_modules/%s' % (terraform_path, backend),
+                    '%s/modules/backend' % terraform_path)
 
     def init(self):
         """Run terraform init"""
@@ -39,7 +38,7 @@ class Terraformer:
 
     def taint(self, what):
         """Taint resources according to a retex
- 
+
         Keywords arguments:
         what - A regex expression
         """
@@ -80,7 +79,8 @@ class Terraformer:
         # would need a way more complicated code, as you can't get the
         # addresses from the file without transformations depending
         # on the resource type.
-        all_resources = self.__run_command(["terraform", "state", "list"], True)
+        all_resources = self.__run_command(
+            ["terraform", "state", "list"], True)
         if not what:
             return all_resources
         filtered_resources = []
