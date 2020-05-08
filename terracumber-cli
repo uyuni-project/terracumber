@@ -74,6 +74,7 @@ def parse_args():
             return False
         if not 'BUILD_TIMESTAMP' in os.environ and not 'BUILD_NUMBER' in os.environ:
             print("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
+            return False
     elif args.runall:
         pass
     else:
