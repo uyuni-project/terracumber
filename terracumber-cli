@@ -259,7 +259,7 @@ def main():
             terracumber.git.Git(args.gitrepo, args.gitref, args.gitfolder, auth=git_creds, auto=True)
             results['git'] = True
         except Exception as e:
-            print("ERROR: %s" % e)
+            print("ERROR: %s: %s" % (type(e).__name__,e))
             results['git'] = False
 
     if args.runall or args.runstep == 'provision':

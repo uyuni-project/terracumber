@@ -48,9 +48,38 @@ class Git:
     def checkout(self):
         """ Checkout changes ignoring any local changes """
         repo = pygit2.Repository(pygit2.discover_repository(self.folder))
-        repo.remotes['origin'].fetch()
-        remote_ref = 'refs/remotes/origin/' + self.ref
-        remote_id = repo.lookup_reference(remote_ref).target
-        local_id = repo.lookup_reference('refs/heads/' + self.ref)
-        local_id.set_target(remote_id)
+        # Create the current remote if we don't have it
+        create_remote = True
+        for remote in repo.remotes:
+            if remote.url == self.url:
+                remote = remote.name
+                create_remote = False
+                break
+        if create_remote:
+            remote = self.url.replace('/','-').replace('.','-').replace(':','-')
+            repo.remotes.create(remote, self.url)
+        remote_url = repo.remotes[remote].url
+        # Fetch from the remote
+        print("Fetching from %s..." % remote_url)
+        repo.remotes[remote].fetch()
+        # Calculate remote reference
+        remote_ref = 'refs/remotes/' + remote + '/' + self.ref
+        try:
+            remote_id = repo.lookup_reference(remote_ref).target
+        except KeyError:
+            raise KeyError ("Could not find reference %s (remote URL %s)" % (remote_ref, remote_url))
+        # Calculate local references and checkout
+        local_ref = 'refs/heads/' + self.ref
+        print("Checking out %s..." % local_ref)
+        try:
+            local_id = repo.lookup_reference(local_ref)
+            repo.checkout(local_ref)
+            local_id.set_target(remote_id)
+        # The exception happes if the local_ref is not available
+        except KeyError as e:
+            repo.create_reference(local_ref, remote_id)
+            repo.checkout(local_ref)
+            local_id = repo.lookup_reference(local_ref)
+        # Hard reset
+        print("Performing hard reset to ignore local changes")
         repo.reset(local_id.target, pygit2.GIT_RESET_HARD)
