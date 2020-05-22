@@ -1,5 +1,6 @@
 """Extract data from junit output XML files"""
-from glob import glob
+from os import path
+from pathlib import Path
 from xml.dom import minidom
 
 
@@ -9,6 +10,11 @@ class Junit:
     def __init__(self, path):
         self.path = path
 
+    def sort_test_files_by_mtime(self):
+        """Return an array with the junit output XML files ordered by mtime"""
+        sorted_list = sorted(Path(self.path).iterdir(), key=path.getmtime, reverse=False)
+        return [str(x) for x in sorted_list]
+
     def get_totals(self):
         """Get the totals for all tests at the parsed junit output XML files
 
@@ -17,7 +23,7 @@ class Junit:
         """
         found = False
         res = {'failures': 0, 'errors': 0, 'skipped': 0, 'tests': 0, 'time': 0}
-        for tfile in glob(self.path):
+        for tfile in self.sort_test_files_by_mtime():
             found = True
             testsuites = minidom.parse(tfile).getElementsByTagName('testsuite')
             for testsuite in testsuites:
@@ -39,7 +45,7 @@ class Junit:
         number: The maximum number of messages to return, -1 for all messages
         """
         failures = []
-        for tfile in glob(self.path):
+        for tfile in self.sort_test_files_by_mtime():
             j_failures = minidom.parse(tfile).getElementsByTagName('failure')
             if number == -1:
                 number = len(failures)

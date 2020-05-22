@@ -53,8 +53,23 @@ class Cucumber:
             o_file.close()
         return chan.recv_exit_status()
 
+    def copy_atime_mtime(self, remote_path, local_path):
+        """Copy atime and mtime from a remote path to a local path
+
+        Keyword arguments:
+        remote_path: A string with the remote path
+        local_path: A string with the local path
+        """
+        # This is required because paramiko does not provide any parameter
+        # to preserve modification times, access times, and modes as -p
+        # on scp
+        sftp_client = self.ssh_client.open_sftp()
+        atime = sftp_client.stat(remote_path).st_atime
+        mtime = sftp_client.stat(remote_path).st_mtime
+        os.utime(local_path, (atime, mtime))
+
     def get(self, remotepath, localpath):
-        """Get a files from the controller
+        """Get a file from the controller
 
         Keyword arguments:
         remotepath - A string with the full remote path. The filename part can be a REGEX
@@ -69,6 +84,7 @@ class Cucumber:
             if re.match("^%s$" % filename, fname):
                 match = True
                 sftp_client.get(path + '/' + fname, localpath + '/' + fname)
+                self.copy_atime_mtime(path + '/' + fname, localpath + '/' + fname)
         if not match:
             raise FileNotFoundError
 
@@ -91,11 +107,13 @@ class Cucumber:
             if stat.S_ISDIR(mode):
                 try:
                     os.mkdir(localpath)
+                    self.copy_atime_mtime(remotepath, localpath)
                 except OSError:
                     pass
                 self.get_recursive(remotepath, localpath, sftp_client)
             elif stat.S_ISREG(mode):
                 sftp_client.get(remotepath, localpath)
+                self.copy_atime_mtime(remotepath, localpath)
 
     def close(self):
         """Close the SSH connection to the controller"""

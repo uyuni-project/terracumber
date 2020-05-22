@@ -193,9 +193,9 @@ def get_results(args, tf_vars, config, ctl_creds):
 def send_mail(args, config, template_data=None, cucumber=None):
     """ Send email with the results """
     template_data['urlprefix'] = config['URL_PREFIX']
-    junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
+    junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
     if cucumber is not None or (os.listdir(args.outputdir) and junit.get_totals() is not None):
-        junit = terracumber.junit.Junit('%s/results_junit/*' % args.outputdir)
+        junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
         # For that case when we send the email as standalone step, calculate
         # cucumber result from junit outputs
         if cucumber is None:
