@@ -14,7 +14,10 @@ class Junit:
         """Return an array with the junit output XML files ordered by mtime"""
         # os.path.getmtime on Python <= 3.5 does not support pathlib.PosixPath
         # so we need to convert all paths to strings
-        file_list = [str(x) for x in Path(self.path).iterdir()]
+        try:
+            file_list = [str(x) for x in Path(self.path).iterdir()]
+        except FileNotFoundError:
+            return []
         return sorted(file_list, key=path.getmtime, reverse=False)
 
     def get_totals(self):
