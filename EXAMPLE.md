@@ -18,7 +18,7 @@ As you are going to run this locally, without using a bridge, and with a libvirt
 sed -i -e 's/use_avahi    = false/use_avahi    = true/' examples/main.tf-jenkins.mycopy
 ```
 
-Also adjust to email to receive the reports. You should use an address local to your machine (`yourusername@localhost`)
+Also adjust the email to receive the reports. You should use an address local to your machine (`yourusername@localhost`)
 ```bash
 sed -i -e 's/default = "juliogonzalez@localhost"/default = "YOUREMAIL"/' examples/main.tf-jenkins.mycopy
 ```
@@ -34,7 +34,7 @@ Export a variable `BUILD_TIMESTAMP` to be used by all the steps (when running on
 export BUILD_TIMESTAMP=$(date '+%Y-%m-%d-%H-%M-%S')
 ```
 
-Create an folder for the outputs (not required if ìt already exists):
+Create a folder for the outputs (not required if ìt already exists):
 ```bash
 mkdir /tmp/sumaform_outputs
 ```

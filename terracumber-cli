@@ -137,7 +137,7 @@ def get_git_credentials(args, tf_vars):
     if args.gituser:
         return {'user': args.gituser, 'password': args.gitpassword}
     elif 'TF_VAR_GIT_USER' in tf_vars:
-        return {'user': tf_vars['TF_VAR_GIT_USER'], 'password': tf_vars['TF_VAR_GIT_USER']}
+        return {'user': tf_vars['TF_VAR_GIT_USER'], 'password': tf_vars['TF_VAR_GIT_PASSWORD']}
     return {'user': None, 'password': None}
 
 
