@@ -103,44 +103,48 @@ module "cucumber_testsuite" {
   }
 
   host_settings = {
-    ctl = {
+    controller = {
         name = "ctl"
     }
-    srv = {
+    server = {
         name = "srv"
     }
-    pxy = {
+    proxy = {
         name = "pxy"
     }
-    cli-sles12sp4 = {
-        image = "sles15sp1"
+    suse-client = {
         name = "cli-sles15"
-    }
-    min-sles12sp4 = {
         image = "sles15sp1"
+    }
+    suse-minion = {
         name = "min-sles15"
-    }
-    minssh-sles12sp4 = {
         image = "sles15sp1"
-        name = "minssh-sles15"
     }
-    min-centos7 = {
+    suse-sshminion = {
+        name = "minssh-sles15"
+        image = "sles15sp1"
+    }
+    redhat-minion = {
         name = "min-centos7"
     }
-    min-ubuntu1804 = {
+    debian-minion = {
         name = "min-ubuntu1804"
     }
-    min-pxeboot = {
+    pxeboot-minion = {
         name = "min-pxeboot"
-        present = true
         image = "sles15sp1"
     }
-    min-kvm = {
+    build-host = {
+        name = "min-sles15"
+        image = "sles15sp1"
+    }
+    kvm-host = {
         name = "min-kvm"
         image = "opensuse151"
     }
   }
 }
+
 output "configuration" {
   value = module.cucumber_testsuite.configuration
 }

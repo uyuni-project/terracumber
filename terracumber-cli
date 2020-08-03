@@ -162,7 +162,7 @@ def get_controller_hostname(args, tf_vars):
     """ Get controller hostbame """
     terraform = terracumber.terraformer.Terraformer(
         args.gitfolder, args.tf, tf_vars, args.logfile)
-    return terraform.get_hostname('ctl')
+    return terraform.get_hostname('controller')
 
 
 def get_results(args, tf_vars, config, ctl_creds):
