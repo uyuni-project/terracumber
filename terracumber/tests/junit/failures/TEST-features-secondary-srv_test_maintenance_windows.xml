@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="12" time="59.303422" name="Maintenance Windows">
+<testcase classname="Maintenance Windows" name="Create Calendar single" time="3.926626">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Create Calendar multi" time="3.520073">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Create a single Schedule" time="3.234064">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Create multi Schedules" time="5.175010">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Assign a single system to the single Schedule" time="2.618915">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Assign systems to a multi Schedule using SSM" time="4.895912">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Schedule Channel Change Action" time="4.725892">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Schedule Package installation Action" time="9.957120">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Detach systems from Schedules" time="3.575453">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Cleanup - Cancel all Scheduled Actions" time="0.524832">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Delete Maintenance Schedules" time="10.364651">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Maintenance Windows" name="Delete Calendars" time="6.784874">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

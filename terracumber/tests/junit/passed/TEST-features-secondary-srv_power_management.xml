@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="8" time="66.542389" name="Power management">
+<testcase classname="Power management" name="Fake an IPMI host" time="0.106577">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Check the power management page" time="2.888702">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Save power management values" time="5.630863">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Test IPMI functions" time="45.853412">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Check power management SSM configuration" time="9.105386">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Check power management SSM operation" time="1.650200">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Cleanup: don't fake an IPMI host" time="0.058853">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Power management" name="Cleanup: remove remaining systems from SSM after power management tests" time="1.248395">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

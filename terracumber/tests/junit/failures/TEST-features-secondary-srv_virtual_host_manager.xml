@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="8" time="48.225686" name="Virtual host manager web UI">
+<testcase classname="Virtual host manager web UI" name="Check the VHM page" time="1.503930">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Check VMware page" time="3.378907">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Create Virtual Host" time="3.950451">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Run virtual-host-gatherer" time="3.342676">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Check new virtual hosts" time="26.132399">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Delete Virtual Host Manager" time="3.248496">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Cleanup: delete virtual host 10.162.186.111" time="3.385005">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Virtual host manager web UI" name="Cleanup: delete virtual host 10.162.186.112" time="3.283822">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="14" time="104.666625" name="Manage users">
+<testcase classname="Manage users" name="Display active users page" time="1.326247">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Create a new user" time="5.327767">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Login as the new user" time="0.178524">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Access user details" time="5.239828">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Add roles" time="65.595839">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Verify user list" time="0.666452">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Fail to deactivate organization administrator" time="4.030095">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Remove role" time="2.342386">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Deactivate ordinary user" time="5.146895">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Reactivate user" time="4.436334">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Delete user" time="3.455120">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Display the CSV separator preference" time="2.800637">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Configure the CSV separator char to semicolon" time="1.893982">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Manage users" name="Cleanup: configure the CSV separator char to comma" time="2.226519">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="3" errors="0" skipped="0" tests="11" time="1013.710991" name="Be able to register a CentOS 7 traditional client and do some basic operations on it">
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Delete the CentOS minion before traditional client tests" time="3.599014">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Prepare the CentOS 7 traditional client" time="22.258717">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Check connection from CentOS 7 traditional to proxy" time="1.571161">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Check registration on proxy of traditional CentOS 7" time="2.127424">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Re-subscribe the CentOS traditional client to a base channel" time="19.545702">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Schedule an OpenSCAP audit job for the CentOS traditional client" time="105.984826">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Check the results of the OpenSCAP scan on the CentOS traditional client" time="3.265389">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Schedule some actions on the CentOS 7 traditional client" time="597.027123">
+  <failure message="failed Schedule some actions on the CentOS 7 traditional client" type="failed">
+    <![CDATA[Scenario: Schedule some actions on the CentOS 7 traditional client
+
+Given I am authorized as "admin" with password "admin"
+When I authenticate to XML-RPC
+And I refresh the packages on "ceos_client" through XML-RPC
+And I run a script on "ceos_client" through XML-RPC
+And I reboot "ceos_client" through XML-RPC
+And I unauthenticate from XML-RPC
+
+Message:
+]]>
+    <![CDATA[Timeout after 400 seconds (Timeout.timeout): machine didn't come up (RuntimeError)
+./features/support/commonlib.rb:149:in `rescue in repeat_until_timeout'
+./features/support/commonlib.rb:127:in `repeat_until_timeout'
+./features/support/client_stack.rb:47:in `check_restart'
+./features/step_definitions/centos_tradclient.rb:58:in `/^I reboot "([^"]*)" through XML-RPC$/'
+features/secondary/trad_centos_client.feature:92:in `And I reboot "ceos_client" through XML-RPC']]>
+  </failure>
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Cleanup: delete the CentOS 7 traditional client" time="3.766108">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Cleanup: bootstrap a CentOS minion after traditional client tests" time="253.802312">
+  <failure message="failed Cleanup: bootstrap a CentOS minion after traditional client tests" type="failed">
+    <![CDATA[Scenario: Cleanup: bootstrap a CentOS minion after traditional client tests
+
+Given I am authorized
+When I go to the bootstrapping page
+Then I should see a "Bootstrap Minions" text
+When I enter the hostname of "ceos_minion" as "hostname"
+And I enter "22" as "port"
+And I enter "root" as "user"
+And I enter "linux" as "password"
+And I select the hostname of "proxy" from "proxies"
+And I click on "Bootstrap"
+And I wait until I see "Successfully bootstrapped host!" text
+And I navigate to "rhn/systems/Overview.do" page
+And I wait until I see the name of "ceos_minion", refreshing the page
+And I wait until onboarding is completed for "ceos_minion"
+
+Message:
+]]>
+    <![CDATA[Text Successfully bootstrapped host! not found (RuntimeError)
+./features/step_definitions/navigation_steps.rb:37:in `/^I wait until I see "([^"]*)" text$/'
+features/secondary/trad_centos_client.feature:115:in `And I wait until I see "Successfully bootstrapped host!" text']]>
+  </failure>
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Be able to register a CentOS 7 traditional client and do some basic operations on it" name="Cleanup: re-subscribe the new CentOS minion to a base channel" time="0.763214">
+  <failure message="failed Cleanup: re-subscribe the new CentOS minion to a base channel" type="failed">
+    <![CDATA[Scenario: Cleanup: re-subscribe the new CentOS minion to a base channel
+
+Given I am on the Systems overview page of this "ceos_minion"
+When I follow "Software" in the content area
+And I follow "Software Channels" in the content area
+And I wait until I do not see "Loading..." text
+And I check radio button "Test Base Channel"
+And I wait until I do not see "Loading..." text
+And I click on "Next"
+Then I should see a "Confirm Software Channel Change" text
+When I click on "Confirm"
+Then I should see a "Changing the channels has been scheduled." text
+And I wait until event "Subscribe channels scheduled by admin" is completed
+
+Message:
+]]>
+    <![CDATA[Unable to find visible link "uyuni-master-min-centos7.mgr.suse.de" (Capybara::ElementNotFound)
+./features/support/commonlib.rb:168:in `click_link_and_wait'
+./features/step_definitions/navigation_steps.rb:207:in `/^I follow "([^"]*)"$/'
+./features/step_definitions/navigation_steps.rb:348:in `/^I am on the Systems overview page of this "([^"]*)"$/'
+features/secondary/trad_centos_client.feature:122:in `Given I am on the Systems overview page of this "ceos_minion"']]>
+  </failure>
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

@@ -27,7 +27,7 @@ class Junit:
         All integers except time, that is a real.
         """
         found = False
-        res = {'failures': 0, 'errors': 0, 'skipped': 0, 'tests': 0, 'time': 0}
+        res = {'failures': 0, 'errors': 0, 'skipped': 0, 'passed': 0, 'tests': 0, 'time': 0}
         for tfile in self.sort_test_files_by_mtime():
             found = True
             testsuites = minidom.parse(tfile).getElementsByTagName('testsuite')
@@ -52,10 +52,8 @@ class Junit:
         failures = []
         for tfile in self.sort_test_files_by_mtime():
             j_failures = minidom.parse(tfile).getElementsByTagName('failure')
-            if number == -1:
-                number = len(failures)
             for j_failure in j_failures:
-                if len(failures) <= number:
+                if len(failures) < number or number == -1:
                     failures.append(j_failure.attributes['message'].value)
                 else:
                     break
