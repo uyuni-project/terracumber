@@ -21,8 +21,8 @@ def parse_args():
     parser.add_argument('--gitrepo',
                         help='URL to the git repository containing terraform definitions',
                         default='https://github.com/uyuni-project/sumaform.git')
-    parser.add_argument('--gitref', help='Git reference to be used',
-                        default='refs/heads/master')
+    parser.add_argument('--gitref', help='Git reference to be used (branch or tag name)',
+                        default='master')
     parser.add_argument('--gitfolder', help='Folder to store the git clone',
                         default='/tmp/sumaform')
     parser.add_argument('--gituser',
