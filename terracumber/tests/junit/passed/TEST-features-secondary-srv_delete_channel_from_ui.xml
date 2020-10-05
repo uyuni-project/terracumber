@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="8" time="33.027117" name="Delete channels with child or clone is not allowed">
+<testcase classname="Delete channels with child or clone is not allowed" name="Clone the first channel before deletion from UI test" time="5.204397">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Clone the second channel using first channel as base" time="4.507682">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Try to delete channel with clone" time="3.354500">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Delete channel without clones neither children" time="4.423103">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Clone a child channel to the clone of x86_64 test channel" time="4.363186">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Try delete channel with child" time="3.601441">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Cleanup: remove cloned child channel" time="3.421575">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Delete channels with child or clone is not allowed" name="Cleanup: remove cloned parent channel" time="4.151235">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

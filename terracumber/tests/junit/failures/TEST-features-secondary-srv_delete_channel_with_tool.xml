@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite failures="0" errors="0" skipped="0" tests="5" time="9.110362" name="Deleting channels with children or clones is not allowed">
+<testcase classname="Deleting channels with children or clones is not allowed" name="Clone the first channel before deletion from tool test" time="4.227852">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Deleting channels with children or clones is not allowed" name="Clone a second channel using first channel as base" time="4.262700">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Deleting channels with children or clones is not allowed" name="Verify if both clone channels exists" time="0.084790">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Deleting channels with children or clones is not allowed" name="Delete channel with one clone" time="0.109606">
+  <system-out/>
+  <system-err/>
+</testcase>
+<testcase classname="Deleting channels with children or clones is not allowed" name="Delete base channel and clone" time="0.425414">
+  <system-out/>
+  <system-err/>
+</testcase>
+  <system-out>
+    <![CDATA[]]>
+  </system-out>
+  <system-err>
+    <![CDATA[]]>
+  </system-err>
+</testsuite>

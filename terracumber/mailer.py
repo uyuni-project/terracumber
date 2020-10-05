@@ -32,6 +32,12 @@ class Mailer():
         self.subject = Template(self.subject).safe_substitute(self.variables)
         return self.subject, self.msg
 
+    def get_message(self):
+        return self.msg
+
+    def get_subject(self):
+        return self.subject
+
     def send_email(self):
         ''' Sends an email '''
         self.msg['Subject'] = self.subject
