@@ -8,7 +8,7 @@ import utils
 
 class TestMailer(unittest.TestCase):
     def setUp(self):
-        self.config = config.read_config('tests/test.tf')
+        self.config = config.read_config('test/resources/test.tf')
         self.from_addr = self.config['MAIL_FROM']
         self.to_addr = self.config['MAIL_TO']
         self.template_data = {}
@@ -40,7 +40,7 @@ failed Schedule some actions on the CentOS 7 traditional client
 """)
         subject_assert = "Results Uyuni-Master FAILED: 66 scenarios (3 failed, 0 errors, 0 skipped, 63 passed)"
 
-        junit_data = junit.Junit('tests/junit/failures')
+        junit_data = junit.Junit('test/resources/junit/failures')
         self.template_data['status'] = "FAILED"
         self.template_data['failures_log'] = '\n'.join(junit_data.get_failures(1))
         self.template_data = utils.merge_two_dicts(self.template_data,junit_data.get_totals())
@@ -76,7 +76,7 @@ Skipped: 0
 """)
         subject_assert = "Results Uyuni-Master PASSED: 55 scenarios (0 failed, 0 errors, 0 skipped, 55 passed)"
 
-        junit_data = junit.Junit('tests/junit/passed')
+        junit_data = junit.Junit('test/resources/junit/passed')
         self.template_data['status'] = "PASSED"
         self.template_data['failures_log'] = ''
         self.template_data = utils.merge_two_dicts(self.template_data,junit_data.get_totals())

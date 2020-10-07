@@ -26,7 +26,7 @@ variable "MAIL_SUBJECT" {
 
 variable "MAIL_TEMPLATE" {
   type = "string"
-  default = "tests/templates/mail-template-jenkins.txt"
+  default = "test/resources/templates/mail-template-jenkins.txt"
 }
 
 variable "MAIL_SUBJECT_ENV_FAIL" {
@@ -36,7 +36,7 @@ variable "MAIL_SUBJECT_ENV_FAIL" {
 
 variable "MAIL_TEMPLATE_ENV_FAIL" {
   type = "string"
-  default = "tests/templates/mail-template-jenkins-env-fail.txt"
+  default = "test/resources/templates/mail-template-jenkins-env-fail.txt"
 }
 
 variable "MAIL_FROM" {

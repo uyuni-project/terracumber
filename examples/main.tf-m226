@@ -9,6 +9,11 @@ variable "CUCUMBER_COMMAND" {
   default = "export PRODUCT='Uyuni' && cd /root/spacewalk/testsuite && rake cucumber:testsuite"
 }
 
+variable "CUCUMBER_GITREPO" {
+  type = "string"
+  default = "https://github.com/uyuni-project/uyuni.git"
+}
+
 variable "CUCUMBER_BRANCH" {
   type = "string"
   default = "master"
@@ -60,10 +65,12 @@ variable "SCC_PASSWORD" {
 
 variable "GIT_USER" {
   type = "string"
+  default = null // Not needed for master, as it is public
 }
 
 variable "GIT_PASSWORD" {
   type = "string"
+  default = null // Not needed for master, as it is public
 }
 
 provider "libvirt" {
@@ -74,20 +81,22 @@ module "cucumber_testsuite" {
   source = "./modules/cucumber_testsuite"
 
   product_version = "uyuni-master"
-  branch          = var.CUCUMBER_BRANCH
+
+  // Cucumber repository configuration for the controller
+  git_username = var.GIT_USER
+  git_password = var.GIT_PASSWORD
+  git_repo     = var.CUCUMBER_GITREPO
+  branch       = var.CUCUMBER_BRANCH
 
   cc_username = var.SCC_USER
   cc_password = var.SCC_PASSWORD
 
-  images = ["centos7", "opensuse150", "opensuse151", "sles15sp1", "ubuntu1804"]
+  images = ["centos7o", "opensuse150o", "opensuse151o", "opensuse152o", "sles15sp1o", "sles15sp2o", "ubuntu1804o"]
 
   use_avahi    = false
   name_prefix  = "uyuni-master-"
   domain       = "tf.local"
   from_email   = "root@suse.inet"
-  git_repo     = "https://github.com/uyuni-project/uyuni.git"
-  git_username = var.GIT_USER
-  git_password = var.GIT_PASSWORD
 
   // portus_uri      = "portus.mgr.suse.de:5000/cucutest"
   // portus_username = "cucutest"
@@ -95,53 +104,42 @@ module "cucumber_testsuite" {
 
   // server_http_proxy = "galaxy-proxy.mgr.suse.de:3128"
 
+  host_settings = {
+    ctl = {
+    }
+    srv = {
+    }
+    pxy = {
+    }
+    cli-sles12sp4 = {
+      image = "sles15sp1"
+      name = "cli-sles15"
+    }
+    min-sles12sp4 = {
+      image = "sles15sp1"
+      name = "min-sles15"
+    }
+    minssh-sles12sp4 = {
+      image = "sles15sp1"
+      name = "minssh-sles15"
+    }
+    min-centos7 = {
+    }
+    min-ubuntu1804 = {
+    }
+    min-pxeboot = {
+      present = true
+      image = "sles15sp1"
+    }
+    min-kvm = {
+      image = "opensuse151"
+    }
+  }
   provider_settings = {
     bridge = null
     pool = "default"
     network_name = "default"
     additional_network = null
-  }
-
-  host_settings = {
-    controller = {
-        name = "ctl"
-    }
-    server = {
-        name = "srv"
-    }
-    proxy = {
-        name = "pxy"
-    }
-    suse-client = {
-        name = "cli-sles15"
-        image = "sles15sp1"
-    }
-    suse-minion = {
-        name = "min-sles15"
-        image = "sles15sp1"
-    }
-    suse-sshminion = {
-        name = "minssh-sles15"
-        image = "sles15sp1"
-    }
-    redhat-minion = {
-        name = "min-centos7"
-    }
-    debian-minion = {
-        name = "min-ubuntu1804"
-    }
-    pxeboot-minion = {
-        name = "min-pxeboot"
-        image = "sles15sp1"
-    }
-    build-host = {
-        name = "min-sles15"
-        image = "sles15sp1"
-    }
-    kvm-host = {
-        name = "min-kvm"
-        image = "opensuse151"
-    }
   }
 }
 

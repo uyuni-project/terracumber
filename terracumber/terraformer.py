@@ -5,7 +5,12 @@ from os import environ, path, symlink, unlink
 from re import match
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
-from .utils import merge_two_dicts
+
+# Fallback to allow running python3 -m unittest
+try:
+    from utils import merge_two_dicts
+except ImportError:
+    from .utils import merge_two_dicts
 
 
 class Terraformer:
@@ -20,17 +25,19 @@ class Terraformer:
                   (False to avoid it)
     """
 
-    def __init__(self, terraform_path, maintf, backend, variables=None, output_file=False):
+    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False):
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
+        if self.variables is None:
+            self.variables = {}
         self.output_file = output_file
         copy(maintf, terraform_path + '/main.tf')
         # Only if we are using a folder with folder structure used by sumaform
-        if path.exists('%s/backend_modules/%s' % (terraform_path, backend)):
-            if path.exists('%s/modules/backend' % terraform_path):
+        if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
+            if path.islink('%s/modules/backend' % terraform_path):
                 unlink('%s/modules/backend' % terraform_path)
-            symlink('%s/backend_modules/%s' % (terraform_path, backend),
+            symlink('%s/backend_modules/%s' % (path.abspath(terraform_path), backend),
                     '%s/modules/backend' % terraform_path)
 
     def inject_repos(self, custom_repositories_json):
@@ -107,37 +114,36 @@ class Terraformer:
         return filtered_resources
 
     def __run_command(self, command, get_output=False):
-        """Run an arbitrary command locally. Optionally, store the output to a file.
-           This is fact a wrapper for __run_command_iterator()
-        """
+        """Run an arbitary command locally. Optionally, store the output to a file. """
         if get_output:
             output = []
-        if self.output_file:
+            output_file = None
+        else:
             output_file = open(self.output_file, 'a')
         try:
-            for stdout_line in self.__run_command_iterator(command):
+            process = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=self.terraform_path,
+                            universal_newlines=True, env=merge_two_dicts(environ, self.variables))
+            for stdout_line in self.__run_command_iterator(process):
                 if get_output:
                     output.append(stdout_line.rstrip())
                     continue
-                if self.output_file:
+                if output_file:
                     output_file.write(stdout_line)
-                print(stdout_line, end='')
+                    print(stdout_line, end='')
+            process.stdout.close()
+            return_code = process.wait()
+            if return_code:
+                raise CalledProcessError(return_code, command)
             if get_output:
                 return output
             return 0
         except CalledProcessError as error:
             return error.returncode
         finally:
-            if self.output_file:
+            if output_file:
                 output_file.close()
 
-    def __run_command_iterator(self, command):
-        """Run an arbitrary command locally, merge stderr to stdout and work as an iterator """
-        process = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=self.terraform_path,
-                        universal_newlines=True, env=merge_two_dicts(environ, self.variables))
+    def __run_command_iterator(self, process):
+        """ Return data from running an arbitary command locally, merge stderr to stdout and work as an interator """
         for stdout_line in iter(process.stdout.readline, ""):
             yield stdout_line
-        process.stdout.close()
-        return_code = process.wait()
-        if return_code:
-            raise CalledProcessError(return_code, command)

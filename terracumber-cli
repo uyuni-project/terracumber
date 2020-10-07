@@ -265,7 +265,7 @@ def cucumber_put(args, tf_vars, ctl_creds, src, dest):
     ctl_creds['hostname'] = ctl
     ctl_creds['timeout'] = 300
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
-    cucumber.put(src, dest)
+    cucumber.put_file(src, dest)
 
 
 def main():
