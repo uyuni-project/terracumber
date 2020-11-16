@@ -14,7 +14,7 @@ class Git:
     folder: The folder where the Git repository will be cloned to
     auth: Either a dictionary with three keys (private, public, passphrase) to access local SSH Keys
           or a dictionary with two keys (user, password) to user user/password authentication
-    auto: If True, clone the repository inmediatly, or do a forced checkout if directory
+    auto: If True, clone the repository immediately, or do a forced checkout if directory
           already exists
 
     If neither ssh_key or user_password are provided, the class will try to use a Key pair from

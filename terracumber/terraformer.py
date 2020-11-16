@@ -1,4 +1,5 @@
 """Run and manage terraform"""
+import fileinput
 from json import load
 from os import environ, path, symlink, unlink
 from re import match
@@ -32,12 +33,28 @@ class Terraformer:
             symlink('%s/backend_modules/%s' % (terraform_path, backend),
                     '%s/modules/backend' % terraform_path)
 
+    def inject_repos(self, custom_repositories_json):
+        """Set additional repositories into the main.tf, so they are injected by sumaform"""
+        if custom_repositories_json:
+            repos = load(custom_repositories_json)
+            for node in repos.keys():
+                if node == 'server':
+                    node_mu_repos = repos.get(node, None)
+                    replacement_list = ["additional_repos = {"]
+                    for name, url in node_mu_repos.items():
+                        replacement_list.append('\n\t{}="{}",'.format(name, url))
+                    replacement_list.append("\n}")
+                    replacement = ''.join(replacement_list)
+                    placeholder = '//' + node + '_additional_repos'
+                    for line in fileinput.input("%s/main.tf" % self.terraform_path, inplace=True):
+                        print(line.rstrip().replace(placeholder, replacement))
+
     def init(self):
         """Run terraform init"""
         return self.__run_command(["terraform", "init"])
 
     def taint(self, what):
-        """Taint resources according to a retex
+        """Taint resources according to a regex
 
         Keywords arguments:
         what - A regex expression
@@ -74,7 +91,7 @@ class Terraformer:
            some type of resources is used
         """
         if not path.isfile(self.terraform_path + '/terraform.tfstate'):
-            return[]
+            return []
         # We should use the terraform.tf state file for this, but then we
         # would need a way more complicated code, as you can't get the
         # addresses from the file without transformations depending
@@ -90,7 +107,7 @@ class Terraformer:
         return filtered_resources
 
     def __run_command(self, command, get_output=False):
-        """Run an arbitary command locally. Optionally, store the output to a file.
+        """Run an arbitrary command locally. Optionally, store the output to a file.
            This is fact a wrapper for __run_command_iterator()
         """
         if get_output:
@@ -115,7 +132,7 @@ class Terraformer:
                 output_file.close()
 
     def __run_command_iterator(self, command):
-        """Run an arbitary command locally, merge stderr to stdout and work as an interator """
+        """Run an arbitrary command locally, merge stderr to stdout and work as an iterator """
         process = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=self.terraform_path,
                         universal_newlines=True, env=merge_two_dicts(environ, self.variables))
         for stdout_line in iter(process.stdout.readline, ""):
