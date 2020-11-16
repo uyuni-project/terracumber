@@ -88,6 +88,16 @@ class Cucumber:
         if not match:
             raise FileNotFoundError
 
+    def put(self, localpath, remotepath):
+        """Put a file in the controller
+
+        Keyword arguments:
+        localpath - A string with the local path to the folder where data is to be copied
+        remotepath - A string with the full remote path.
+        """
+        sftp_client = self.ssh_client.open_sftp()
+        sftp_client.put(localpath, remotepath)
+
     # Credit goes to https://stackoverflow.com/a/50130813
     def get_recursive(self, remotedir, localdir, sftp_client=None):
         """Get a directory (recursively) from the controller)

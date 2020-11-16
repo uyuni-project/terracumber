@@ -55,7 +55,7 @@ def parse_args():
     parser.add_argument('--runstep', help="""Run a step. Usual order is: gitsync, provision,
                                              cucumber (one or more times), getresults, mail.
                                              For cucumber, --cucumber-cmd must be present, and
-                                             either environement variable BUILD_NUMBER from Jenkins
+                                             either environment variable BUILD_NUMBER from Jenkins
                                              or BUILD_TIMESTAMP variable (manually managed) must be
                                              exported""",
                         choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail'], default=False)
@@ -63,6 +63,11 @@ def parse_args():
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
                         dest='cucumber_cmd', default=False)
+    parser.add_argument('--custom-repositories', help="""Path of a JSON file listing custom repositories per host.
+                                                         This trigger two actions: 
+                                                         1) It includes an additional repository on the server via sumaform
+                                                         2) It copy the json file into a testsuide sub-folder inside the controller""",
+                        dest='custom_repositories', default=None)
     # I think this is sumaform specific, in the future we should
     parser.add_argument('--sumaform-backend', help="""sumaform backend to be used. Only valid when using
                                                       sumaformn. Possible values are libvirt, aws or null.
@@ -92,14 +97,14 @@ def read_config(tf_file):
                      'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
                      'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
         if required not in config:
-            print("ERROR: variable %s doesnot exist at %s and is mandatory!" %
+            print("ERROR: variable %s does not exist at %s and is mandatory!" %
                   (required, tf_file))
             return False
     return config
 
 
 def get_tf_vars():
-    """Create a ditctionary with all TF_VAR_* environment variables"""
+    """Create a dictionary with all TF_VAR_* environment variables"""
     tf_vars = {}
     for key, value in os.environ.items():
         if re.match('^TF_VAR_.*$', key):
@@ -147,6 +152,9 @@ def run_terraform(args, tf_vars):
     terraform = terracumber.terraformer.Terraformer(args.gitfolder, args.tf,
                                                     args.sumaform_backend, tf_vars,
                                                     args.logfile)
+    if args.custom_repositories:
+        with open(args.custom_repositories, 'r') as repos_file:
+            terraform.inject_repos(repos_file)
     if args.init:
         terraform.init()
     if args.taint:
@@ -160,7 +168,7 @@ def run_terraform(args, tf_vars):
 
 
 def get_controller_hostname(args, tf_vars):
-    """ Get controller hostbame """
+    """ Get controller hostname """
     terraform = terracumber.terraformer.Terraformer(
         args.gitfolder, args.tf, tf_vars, args.logfile)
     return terraform.get_hostname('controller')
@@ -251,6 +259,15 @@ def cucumber_run(args, tf_vars, ctl_creds, cmd):
         return False
 
 
+def cucumber_put(args, tf_vars, ctl_creds, src, dest):
+    """ Copy a file on the controller """
+    ctl = get_controller_hostname(args, tf_vars)
+    ctl_creds['hostname'] = ctl
+    ctl_creds['timeout'] = 300
+    cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
+    cucumber.put(src, dest)
+
+
 def main():
     """Main function"""
     args = parse_args()
@@ -288,6 +305,11 @@ def main():
     if args.runall or args.runstep == 'provision':
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
+
+    # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
+    if (args.custom_repositories and results['terraform']):
+        custom_repositories_path = '/root/spacewalk/testsuite/features/upload_files/custom_repositories.json'
+        cucumber_put(args, tf_vars, ctl_creds, args.custom_repositories, custom_repositories_path)
 
     # Only if terraform was successful or step cucumber is called
     if (args.runall and results['terraform']) or args.runstep == 'cucumber':
