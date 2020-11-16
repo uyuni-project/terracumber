@@ -2,6 +2,7 @@
 """CLI tool to use terracumber"""
 import argparse
 import datetime
+import json
 import os
 import re
 import sys
@@ -196,6 +197,10 @@ def send_mail(args, config, template_data=None, cucumber=None):
     junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
     if cucumber is not None or (os.listdir(args.outputdir) and junit.get_totals() is not None):
         junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
+        with open(os.path.join(args.outputdir, "total_result.json"), 'w') as jtotal:
+            totals = junit.get_totals()
+            totals['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            json.dump(totals, jtotal)
         # For that case when we send the email as standalone step, calculate
         # cucumber result from junit outputs
         if cucumber is None:
