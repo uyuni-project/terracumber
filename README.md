@@ -70,3 +70,15 @@ The email templates are plain text files with some variables to be replaced by `
 # Bonus: clean old results
 
 The script `clean-old-results` can be used to get rid of undesired old results (use `-h` to get help) 
+
+# How to contribute
+
+It is easy: just create a Pull Request with your contribution, and make sure that the unit tests are passing.
+
+To run them:
+
+```bash
+cd terracumber; python3 -m unittest
+```
+
+For now the unit tests only cover the module

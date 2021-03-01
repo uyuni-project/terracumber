@@ -75,25 +75,26 @@ class Cucumber:
         remotepath - A string with the full remote path. The filename part can be a REGEX
         localpath - A string with the local path to the folder where data is to be copied
         """
-        match = False
+        copied_files = []
         sftp_client = self.ssh_client.open_sftp()
         path = remotepath.rsplit('/', 1)[0]
         filename = remotepath.rsplit('/', 1)[1]
         files = sftp_client.listdir(path)
         for fname in files:
             if re.match("^%s$" % filename, fname):
-                match = True
+                copied_files.append(path + '/' + fname)
                 sftp_client.get(path + '/' + fname, localpath + '/' + fname)
                 self.copy_atime_mtime(path + '/' + fname, localpath + '/' + fname)
-        if not match:
+        if not copied_files:
             raise FileNotFoundError
+        return(copied_files)
 
-    def put(self, localpath, remotepath):
+    def put_file(self, localpath, remotepath):
         """Put a file in the controller
 
         Keyword arguments:
-        localpath - A string with the local path to the folder where data is to be copied
-        remotepath - A string with the full remote path.
+        localpath - A string with the local path to a file to be copied to the controler
+        remotepath - A string with the full remote path
         """
         sftp_client = self.ssh_client.open_sftp()
         sftp_client.put(localpath, remotepath)

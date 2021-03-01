@@ -25,107 +25,125 @@ class Git:
         self.url = url
         self.ref = ref
         self.folder = folder
+        self.cloning = False
+        self.tag = False
+        self.reset_hard = False
+        self.repo = None
         if 'user' in auth:
-            credentials = pygit2.credentials.UserPass(auth['user'],
-                                                      auth['password'])
+            self.credentials = pygit2.credentials.UserPass(auth['user'],
+                                                           auth['password'])
         elif 'private' in auth:
-            credentials = pygit2.credentials.Keypair('git',
-                                                     auth['private'],
-                                                     auth['public'],
-                                                     auth['passphrase'])
+            self.credentials = pygit2.credentials.Keypair('git',
+                                                       auth['private'],
+                                                       auth['public'],
+                                                       auth['passphrase'])
         else:
-            credentials = pygit2.KeypairFromAgent('git')
+            self.credentials = pygit2.KeypairFromAgent('git')
         if not auto:
             return
         if os.path.isdir(self.folder):
+            self.repo = pygit2.Repository(pygit2.discover_repository(self.folder))
             self.checkout()
         else:
             self.clone()
 
+
     def clone(self):
         """ Clone a repository to the specified folder """
-        repo = pygit2.clone_repository(self.url, self.folder)
+        self.cloning = True
+        self.repo = pygit2.clone_repository(self.url, self.folder)
         try:
-            repo.checkout('refs/heads/' + self.ref)
+            self.repo.checkout('refs/heads/' + self.ref)
         except KeyError:
             # Maybe this is a tag
-            repo.checkout('refs/tags/' + self.ref)
+            self.repo.checkout('refs/tags/' + self.ref)
+
 
     def ref_is_tag(self):
         """ Check if the reference on the object is a tag
             This can only be checked on the local repository, so if
             you want to check tags on a new remote, make sure you use
             refresh_local_repo() first """
-        repo = pygit2.Repository(pygit2.discover_repository(self.folder))
-        if 'refs/tags/' + self.ref in repo.listall_references():
+        if 'refs/tags/' + self.ref in self.repo.listall_references():
+            self.tag = True
             return True
         return False
+
+
+    def is_remote(self):
+        """ Check if a remote exits on a local repository """
+        for remote in self.repo.remotes:
+            if remote.url == self.url:
+                return remote.name
+        return False
+
+
+    def remove_all_tags(self):
+        """ Remove all tags from a local repository """
+        removed = False
+        for reference in self.repo.listall_references():
+            if re.match('refs\/tags\/.+', reference):
+                self.repo.references.delete(reference)
+                removed = True
+        return removed
+
+
+    def create_remote_from_url(self):
+        """ Create a remote from URL on a local repository """
+        remote_name = self.url.replace('/', '-').replace('.', '-').replace(':', '-')
+        self.repo.remotes.create(remote_name, self.url)
+        return remote_name
 
 
     def refresh_local_repo(self):
         """ Refresh a local repository, including remote change management when
             needed """
-        repo = pygit2.Repository(pygit2.discover_repository(self.folder))
         # Create the current remote if we don't have it
-        create_remote = True
-        for remote in repo.remotes:
-            if remote.url == self.url:
-                remote = remote.name
-                create_remote = False
-                break
-        if create_remote:
-            remote = self.url.replace(
-                '/', '-').replace('.', '-').replace(':', '-')
-            repo.remotes.create(remote, self.url)
-        remote_url = repo.remotes[remote].url
+        remote = self.is_remote()
+        if not remote:
+            remote = self.create_remote_from_url()
+        remote_url = self.repo.remotes[remote].url
         # Delete tags and fetch from the remote
         print("Removing tags and fetching from %s..." % remote_url)
-        for reference in repo.listall_references():
-            if re.match('refs\/tags\/.+', reference):
-                repo.references.delete(reference)
+        self.remove_all_tags()
         # We need to force tags, as otherwise fetch() only downloads heds by default
-        repo.remotes[remote].fetch(refspecs=['+refs/heads/*:refs/remotes/%s/*' % remote, '+refs/tags/*:refs/remotes/%s/*' % remote])
-        return repo, remote, remote_url
+        self.repo.remotes[remote].fetch(refspecs=['+refs/heads/*:refs/remotes/%s/*' % remote, '+refs/tags/*:refs/remotes/%s/*' % remote])
+        return remote, remote_url
 
 
     def checkout(self):
         """ Checkout changes ignoring any local changes """
-        repo, remote, remote_url = self.refresh_local_repo()
+        remote, remote_url = self.refresh_local_repo()
         # Calculate remote reference
         if self.ref_is_tag():
             remote_ref = 'refs/tags/' + self.ref
             print("%s seems to be a tag" % self.ref)
-            try:
-                remote_id = repo.lookup_reference(remote_ref).target
-            except KeyError:
-                raise KeyError("Could not find reference %s (remote URL %s)" % (
-                    remote_ref, remote_url))
         else:
             remote_ref = 'refs/remotes/' + remote + '/' + self.ref
-            try:
-                remote_id = repo.lookup_reference(remote_ref).target
-            except KeyError:
-                raise KeyError("Could not find reference %s (remote URL %s)" % (
-                    remote_ref, remote_url))
-
+        try:
+            remote_id = self.repo.lookup_reference(remote_ref).target
+        except KeyError:
+            raise Exception("Could not find reference %s (remote URL %s)" % (
+                remote_ref, remote_url)) from None
         print("Checking out")
         # If the remote ref is a tag, just checkout
         if self.ref_is_tag():
             local_ref = remote_ref
-            local_id = repo.lookup_reference(local_ref)
-            repo.checkout(local_ref)
+            local_id = self.repo.lookup_reference(local_ref)
+            self.repo.checkout(local_ref)
             return
         # Otherwise, checkout the reference, set the remote ID
         # and perform a hard reset
         try:
             local_ref = 'refs/heads/' + self.ref
-            local_id = repo.lookup_reference(local_ref)
-            repo.checkout(local_ref)
+            local_id = self.repo.lookup_reference(local_ref)
+            self.repo.checkout(local_ref)
             local_id.set_target(remote_id)
         # The exception happens if the local_ref is not available
         except KeyError as e:
-            repo.create_reference(local_ref, remote_id)
-            repo.checkout(local_ref)
+            self.repo.create_reference(local_ref, remote_id)
+            self.repo.checkout(local_ref)
             local_id = repo.lookup_reference(local_ref)
         print("Performing hard reset to ignore local changes")
-        repo.reset(local_id.target, pygit2.GIT_RESET_HARD)
+        self.repo.reset(local_id.target, pygit2.GIT_RESET_HARD)
+        self.reset_hard = True
