@@ -1,5 +1,13 @@
 """Common tools"""
 
+def overwrite_dict(dict_x, dict_y):
+    """ Overwrite exising elements in dict_x with values from dict_y.
+    This function does not modify dict_x but returns a new dict as a result """
+    dict_z = dict_x.copy()
+    for k in dict_z.keys():
+        if k in dict_y.keys():
+            dict_z[k] = dict_y[k]
+    return dict_z
 
 def merge_two_dicts(dict_x, dict_y):
     """Merge two dictionaries

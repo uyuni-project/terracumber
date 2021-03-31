@@ -283,6 +283,7 @@ def main():
     if not config:
         sys.exit(1)
     tf_vars = get_tf_vars()
+    config = overwrite(config, tf_vars)
     git_creds = get_git_credentials(args, tf_vars)
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
     # and agent (already supported by terraform.cucumber)
