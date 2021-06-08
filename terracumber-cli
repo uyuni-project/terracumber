@@ -107,8 +107,10 @@ def get_tf_vars():
     """Create a dictionary with all TF_VAR_* environment variables"""
     tf_vars = {}
     for key, value in os.environ.items():
-        if re.match('^TF_VAR_.*$', key):
-            tf_vars[key] = value
+        p = re.compile('^TF_VAR_(.*)$')
+        result = p.search(key)
+        if result:
+            tf_vars[result.group(1)] = value
     return tf_vars
 
 
@@ -142,8 +144,8 @@ def get_git_credentials(args, tf_vars):
        environment variables otherwise"""
     if args.gituser:
         return {'user': args.gituser, 'password': args.gitpassword}
-    elif 'TF_VAR_GIT_USER' in tf_vars:
-        return {'user': tf_vars['TF_VAR_GIT_USER'], 'password': tf_vars['TF_VAR_GIT_PASSWORD']}
+    elif 'GIT_USER' in tf_vars:
+        return {'user': tf_vars['GIT_USER'], 'password': tf_vars['GIT_PASSWORD']}
     return {'user': None, 'password': None}
 
 
