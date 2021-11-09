@@ -23,15 +23,17 @@ class Terraformer:
     variables - Dictionary with variables to be replaced at the main.tf
     output_file - String with the path to a file to store console output to the specified file
                   (False to avoid it)
+    terraform_bin - path to terraform bin
     """
 
-    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False):
+    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform'):
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
         if self.variables is None:
             self.variables = {}
         self.output_file = output_file
+        self.terraform_bin = terraform_bin
         copy(maintf, terraform_path + '/main.tf')
         # Only if we are using a folder with folder structure used by sumaform
         if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
@@ -58,7 +60,7 @@ class Terraformer:
 
     def init(self):
         """Run terraform init"""
-        return self.__run_command(["terraform", "init"])
+        return self.__run_command([self.terraform_bin, "init"])
 
     def taint(self, what):
         """Taint resources according to a regex
@@ -69,15 +71,15 @@ class Terraformer:
         resources = self.__get_resources(what)
         for resource in resources:
             print(resource)
-            self.__run_command(["terraform", "taint", "%s" % resource])
+            self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
     def apply(self):
         """Run terraform apply"""
-        return self.__run_command(["terraform", "apply", "-auto-approve"])
+        return self.__run_command([self.terraform_bin, "apply", "-auto-approve"])
 
     def destroy(self):
         """Run terraform destroy"""
-        self.__run_command(["terraform", "destroy", "-auto-approve"])
+        self.__run_command([self.terraform_bin, "destroy", "-auto-approve"])
 
     def get_hostname(self, resource):
         """Get a hostname for an instance from the tfstate file"""
@@ -104,7 +106,7 @@ class Terraformer:
         # addresses from the file without transformations depending
         # on the resource type.
         all_resources = self.__run_command(
-            ["terraform", "state", "list"], True)
+            [self.terraform_bin, "state", "list"], True)
         if not what:
             return all_resources
         filtered_resources = []
