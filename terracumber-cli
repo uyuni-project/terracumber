@@ -34,9 +34,12 @@ def parse_args():
         '--logfile', help='File to store the log', default='/tmp/sumaform.log')
     parser.add_argument('--outputdir', help='Folder to store the cucumber outputs',
                         default='/tmp/sumaform_outputs')
+    parser.add_argument('--destroy', help="""Destroy the environment and create it again from scratch
+                                             Valid when using --runall or --runstep provision.""",
+                        action='store_true', default=False)
     parser.add_argument('--taint', help="""A regex with the resources to taint before provisioning
-                                           the environment. If not present, the whole environment
-                                           will be destroyed and reprovisioned.
+                                           the environment. If not present, and --destroy is not used,
+                                           the environment will be reused.
                                            Valid when using --runall or --runstep provision.
                                            Example: '.*(domain|main_disk).*'""",
                         default=False)
@@ -163,7 +166,7 @@ def run_terraform(args, tf_vars):
         terraform.init()
     if args.taint:
         terraform.taint(args.taint)
-    else:
+    if args.destroy:
         terraform.destroy()
     result = terraform.apply()
     if result == 0:
