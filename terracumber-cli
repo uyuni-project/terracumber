@@ -315,7 +315,7 @@ def main():
         results['terraform'] = run_terraform(args, tf_vars)
 
     # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
-    if (args.custom_repositories and results['terraform']):
+    if (args.custom_repositories and results['terraform'] and args.sumaform_backend != 'aws'):
         custom_repositories_path = '/root/spacewalk/testsuite/features/upload_files/custom_repositories.json'
         cucumber_put(args, tf_vars, ctl_creds, args.custom_repositories, custom_repositories_path)
 
