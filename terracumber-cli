@@ -4,6 +4,7 @@ import argparse
 import datetime
 import json
 import os
+import paramiko
 import re
 import sys
 import terracumber.config
@@ -79,6 +80,10 @@ def parse_args():
                                                       libvirt is used by default""",
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
+    parser.add_argument('--bastion_key', help="""bastion key to be use""",
+                        default="/home/jenkins/.ssh/testing-suma.pem",
+                        dest='bastion_ssh_key'
+                        )
     args = parser.parse_args()
     if args.runstep:
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
@@ -106,6 +111,21 @@ def read_config(tf_file):
                   (required, tf_file))
             return False
     return config
+
+
+def open_bastion_channel(args, tf_vars, bst_creds, ctl_creds):
+    ctl = get_controller_hostname(args, tf_vars)
+    ctl_creds['hostname'] = ctl
+    bst = get_bastion_hostname(args, tf_vars)
+    bst_creds['hostname'] = bst
+    bastion = paramiko.SSHClient()
+    bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    bastion.connect(**bst_creds)
+    bastion_transport = bastion.get_transport()
+    dest_addr = (ctl_creds["hostname"], 22)  # edited#
+    local_addr = (bst_creds["hostname"], 22)  # edited#
+    bastion_channel = bastion_transport.open_channel("direct-tcpip", dest_addr, local_addr)
+    return bastion_channel
 
 
 def get_tf_vars():
@@ -179,6 +199,13 @@ def get_controller_hostname(args, tf_vars):
     terraform = terracumber.terraformer.Terraformer(
         args.gitfolder, args.tf, tf_vars, args.logfile)
     return terraform.get_hostname('controller')
+
+
+def get_bastion_hostname(args, tf_vars):
+    """ Get bastion hostname """
+    terraform = terracumber.terraformer.Terraformer(
+        args.gitfolder, args.tf, tf_vars, args.logfile)
+    return terraform.get_hostname('bastion')
 
 
 def get_results(args, tf_vars, config, ctl_creds):
@@ -295,11 +322,12 @@ def main():
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
     # and agent (already supported by terraform.cucumber)
     ctl_creds = {'hostname': None, 'username': 'root',
-                 'port': 22, 'password': 'linux'}
+                 'port': 22, 'password': 'linux','sock': None}
     results = {}
     results = {'git': None, 'terraform': None,
                'cucumber': None, 'getresults': None, 'mail': None}
-
+    bastion_creds = {'hostname': None, 'username': 'ec2-user',
+                 'port': 22, 'key_filename': args.bastion_ssh_key}
     if args.runall or args.runstep == 'gitsync':
         print("Cloning/Updating repository to/at %s..." % args.gitfolder)
         try:
@@ -314,8 +342,12 @@ def main():
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
+    if args.sumaform_backend == 'aws':
+        channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
+        ctl_creds["sock"] = channel
+
     # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
-    if (args.custom_repositories and results['terraform'] and args.sumaform_backend != 'aws'):
+    if (args.custom_repositories and results['terraform'] ):
         custom_repositories_path = '/root/spacewalk/testsuite/features/upload_files/custom_repositories.json'
         cucumber_put(args, tf_vars, ctl_creds, args.custom_repositories, custom_repositories_path)
 
