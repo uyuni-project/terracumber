@@ -346,7 +346,7 @@ def main():
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
-    if args.sumaform_backend == 'aws' and args.runstep != 'mirror':
+    if args.sumaform_backend == 'aws' and (args.runstep == 'cucumber' or args.custom_repositories):
         channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
         ctl_creds["sock"] = channel
 
