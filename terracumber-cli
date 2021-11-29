@@ -63,9 +63,8 @@ def parse_args():
                                              For cucumber, --cucumber-cmd must be present, and
                                              either environment variable BUILD_NUMBER from Jenkins
                                              or BUILD_TIMESTAMP variable (manually managed) must be
-                                             exported
-                                             To only deploy mirror, variable mirror can be use""",
-                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail', 'mirror'], default=False)
+                                             exported""",
+                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail'], default=False)
     parser.add_argument('--cucumber-cmd', help="""The full and arbitrary command to be run for
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
@@ -342,7 +341,7 @@ def main():
             print("ERROR: %s: %s" % (type(e).__name__, e))
             results['git'] = False
 
-    if args.runall or args.runstep == 'provision' or args.runstep == 'mirror':
+    if args.runall or args.runstep == 'provision':
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
@@ -351,7 +350,7 @@ def main():
         ctl_creds["sock"] = channel
 
     # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
-    if (args.custom_repositories and results['terraform'] ):
+    if (args.custom_repositories and results['terraform']):
         custom_repositories_path = '/root/spacewalk/testsuite/features/upload_files/custom_repositories.json'
         cucumber_put(args, tf_vars, ctl_creds, args.custom_repositories, custom_repositories_path)
 
