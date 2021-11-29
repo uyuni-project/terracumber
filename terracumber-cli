@@ -63,8 +63,9 @@ def parse_args():
                                              For cucumber, --cucumber-cmd must be present, and
                                              either environment variable BUILD_NUMBER from Jenkins
                                              or BUILD_TIMESTAMP variable (manually managed) must be
-                                             exported""",
-                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail'], default=False)
+                                             exported
+                                             To only deploy mirror, variable mirror can be use""",
+                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail', 'mirror'], default=False)
     parser.add_argument('--cucumber-cmd', help="""The full and arbitrary command to be run for
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
@@ -322,7 +323,7 @@ def main():
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
     # and agent (already supported by terraform.cucumber)
     ctl_creds = {'hostname': None, 'username': 'root',
-                 'port': 22, 'password': 'linux','sock': None}
+                 'port': 22, 'password': 'linux', 'sock': None}
     results = {}
     results = {'git': None, 'terraform': None,
                'cucumber': None, 'getresults': None, 'mail': None}
@@ -338,15 +339,16 @@ def main():
             print("ERROR: %s: %s" % (type(e).__name__, e))
             results['git'] = False
 
-    if args.runall or args.runstep == 'provision':
+    if args.runall or args.runstep == 'provision' or args.runstep == 'mirror':
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
+    if args.sumaform_backend == 'aws' and args.runstep != 'mirror':
+        channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
+        ctl_creds["sock"] = channel
+
     # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
     if (args.custom_repositories and results['terraform'] ):
-        if args.sumaform_backend == 'aws':
-            channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
-            ctl_creds["sock"] = channel
         custom_repositories_path = '/root/spacewalk/testsuite/features/upload_files/custom_repositories.json'
         cucumber_put(args, tf_vars, ctl_creds, args.custom_repositories, custom_repositories_path)
 
