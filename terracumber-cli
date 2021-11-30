@@ -114,15 +114,15 @@ def read_config(tf_file):
 
 
 def open_bastion_channel(args, tf_vars, bst_creds, ctl_creds):
-    """Update bastion and controller update"""
+    """Set bastion and controller hostname"""
     ctl_creds['hostname'] = get_controller_hostname(args, tf_vars)
     bst_creds['hostname'] = get_bastion_hostname(args, tf_vars)
-    """Create connection to bastion"""
+    """Open connection with bastion"""
     bastion = paramiko.SSHClient()
     bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     bastion.connect(**bst_creds)
     bastion_transport = bastion.get_transport()
-    """Creation channel between bastion and controller"""
+    """Create port forward between bastion and controller"""
     bastion_channel = bastion_transport.open_channel("direct-tcpip", (ctl_creds["hostname"], 22),
                                                      (bst_creds["hostname"], 22))
     return bastion_channel
