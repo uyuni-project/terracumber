@@ -203,9 +203,13 @@ def get_controller_hostname(args, tf_vars):
 
 def get_bastion_hostname(args, tf_vars):
     """ Get bastion hostname """
-    terraform = terracumber.terraformer.Terraformer(
-        args.gitfolder, args.tf, tf_vars, args.logfile)
-    return terraform.get_hostname('bastion')
+    try:
+        terraform = terracumber.terraformer.Terraformer(
+            args.gitfolder, args.tf, tf_vars, args.logfile)
+        return terraform.get_hostname('bastion')
+    except KeyError:
+        return None
+
 
 
 def get_results(args, tf_vars, config, ctl_creds):
