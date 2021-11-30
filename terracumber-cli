@@ -81,7 +81,6 @@ def parse_args():
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
     parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""",
-                        default="~/.ssh/testing-suma.pem",
                         dest='bastion_ssh_key'
                         )
     args = parser.parse_args()
