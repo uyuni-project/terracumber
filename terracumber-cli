@@ -80,8 +80,8 @@ def parse_args():
                                                       libvirt is used by default""",
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
-    parser.add_argument('--bastion_key', help="""bastion key to be use""",
-                        default="/home/jenkins/.ssh/testing-suma.pem",
+    parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""",
+                        default="~/.ssh/testing-suma.pem",
                         dest='bastion_ssh_key'
                         )
     args = parser.parse_args()
@@ -115,19 +115,16 @@ def read_config(tf_file):
 
 def open_bastion_channel(args, tf_vars, bst_creds, ctl_creds):
     """Update bastion and controller update"""
-    ctl = get_controller_hostname(args, tf_vars)
-    ctl_creds['hostname'] = ctl
-    bst = get_bastion_hostname(args, tf_vars)
-    bst_creds['hostname'] = bst
+    ctl_creds['hostname'] = get_controller_hostname(args, tf_vars)
+    bst_creds['hostname'] = get_bastion_hostname(args, tf_vars)
     """Create connection to bastion"""
     bastion = paramiko.SSHClient()
     bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     bastion.connect(**bst_creds)
     bastion_transport = bastion.get_transport()
     """Creation channel between bastion and controller"""
-    dest_addr = (ctl_creds["hostname"], 22)  # edited#
-    local_addr = (bst_creds["hostname"], 22)  # edited#
-    bastion_channel = bastion_transport.open_channel("direct-tcpip", dest_addr, local_addr)
+    bastion_channel = bastion_transport.open_channel("direct-tcpip", (ctl_creds["hostname"], 22),
+                                                     (bst_creds["hostname"], 22))
     return bastion_channel
 
 
@@ -330,7 +327,7 @@ def main():
     results = {'git': None, 'terraform': None,
                'cucumber': None, 'getresults': None, 'mail': None}
     bastion_creds = {'hostname': None, 'username': 'ec2-user',
-                 'port': 22, 'key_filename': args.bastion_ssh_key}
+                     'port': 22, 'key_filename': args.bastion_ssh_key}
     if args.runall or args.runstep == 'gitsync':
         print("Cloning/Updating repository to/at %s..." % args.gitfolder)
         try:
@@ -345,7 +342,8 @@ def main():
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
-    if args.sumaform_backend == 'aws' and (args.runstep == 'cucumber' or args.custom_repositories):
+    if get_bastion_hostname(args, tf_vars) is not None and (
+            args.runstep == 'cucumber' or args.custom_repositories or args.runall):
         channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
         ctl_creds["sock"] = channel
 
