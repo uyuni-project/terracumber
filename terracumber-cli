@@ -118,7 +118,7 @@ def open_bastion_channel(args, tf_vars, bst_creds, ctl_creds):
         bst_creds['hostname'] = get_bastion_hostname(args, tf_vars)
         """Open connection with bastion"""
         bastion = paramiko.SSHClient()
-        bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())AttributeError
+        bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         bastion.connect(**bst_creds)
         bastion_transport = bastion.get_transport()
         """Create port forward between bastion and controller"""
