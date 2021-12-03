@@ -80,9 +80,8 @@ def parse_args():
                                                       libvirt is used by default""",
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
-    parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""",
-                        dest='bastion_ssh_key'
-                        )
+    parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""", dest='bastion_ssh_key', default=None)
+
     args = parser.parse_args()
     if args.runstep:
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
