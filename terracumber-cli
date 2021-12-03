@@ -112,17 +112,20 @@ def read_config(tf_file):
 
 
 def open_bastion_channel(args, tf_vars, bst_creds, ctl_creds):
-    """Set bastion and controller hostname"""
-    ctl_creds['hostname'] = get_controller_hostname(args, tf_vars)
-    bst_creds['hostname'] = get_bastion_hostname(args, tf_vars)
-    """Open connection with bastion"""
-    bastion = paramiko.SSHClient()
-    bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    bastion.connect(**bst_creds)
-    bastion_transport = bastion.get_transport()
-    """Create port forward between bastion and controller"""
-    bastion_channel = bastion_transport.open_channel("direct-tcpip", (ctl_creds["hostname"], 22),
-                                                     (bst_creds["hostname"], 22))
+    if args.bastion_ssh_key:
+        """Set bastion and controller hostname"""
+        ctl_creds['hostname'] = get_controller_hostname(args, tf_vars)
+        bst_creds['hostname'] = get_bastion_hostname(args, tf_vars)
+        """Open connection with bastion"""
+        bastion = paramiko.SSHClient()
+        bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())AttributeError
+        bastion.connect(**bst_creds)
+        bastion_transport = bastion.get_transport()
+        """Create port forward between bastion and controller"""
+        bastion_channel = bastion_transport.open_channel("direct-tcpip", (ctl_creds["hostname"], 22),
+                                                         (bst_creds["hostname"], 22))
+    else:
+        raise AttributeError('SSH key missing for bastion')
     return bastion_channel
 
 
@@ -207,7 +210,6 @@ def get_bastion_hostname(args, tf_vars):
         return terraform.get_hostname('bastion')
     except KeyError:
         return None
-
 
 
 def get_results(args, tf_vars, config, ctl_creds):
