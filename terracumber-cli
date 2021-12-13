@@ -346,10 +346,11 @@ def main():
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
-    if get_bastion_hostname(args, tf_vars) and (
-            args.runstep == 'cucumber' or args.custom_repositories or args.runall):
-        channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
-        ctl_creds["sock"] = channel
+    if args.bastion_ssh_key:
+        if get_bastion_hostname(args, tf_vars) and (
+                args.runstep == 'cucumber' or args.custom_repositories or args.runall):
+            channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
+            ctl_creds["sock"] = channel
 
     # Copy a JSON file inside the controller which includes a list of custom repositories per host to be created by the QAM Cucumber Testsuite
     if (args.custom_repositories and results['terraform']):
