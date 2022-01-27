@@ -106,13 +106,8 @@ class Git:
         # Delete tags and fetch from the remote
         print("Removing tags and fetching from %s..." % remote_url)
         self.remove_all_tags()
-        # We need to force tags, as otherwise fetch() only downloads
-        # heads by default
-        # We need to force fetching pull requests as well, so than we
-        # can checkout pr/PR/head where PR is the pull request number
-        self.repo.remotes[remote].fetch(refspecs=['+refs/heads/*:refs/remotes/%s/*' % remote,
-            '+refs/tags/*:refs/remotes/%s/*' % remote,
-            '+refs/pull/*:refs/remotes/%s/pr/*' % remote])
+        # We need to force tags, as otherwise fetch() only downloads heds by default
+        self.repo.remotes[remote].fetch(refspecs=['+refs/heads/*:refs/remotes/%s/*' % remote, '+refs/tags/*:refs/remotes/%s/*' % remote])
         return remote, remote_url
 
 
