@@ -43,6 +43,7 @@ class Cucumber:
         chan.update_environment(env_vars)
         chan_stream = chan.makefile()
         print("try to understand 1")
+        tran.set_keepalive(10)
         chan.exec_command(command)
         print("try to understand 2")
         if output_file:
