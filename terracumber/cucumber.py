@@ -42,10 +42,8 @@ class Cucumber:
         chan.get_pty()
         chan.update_environment(env_vars)
         chan_stream = chan.makefile()
-        print("try to understand 1")
         tran.set_keepalive(10)
         chan.exec_command(command)
-        print("try to understand 2")
         if output_file:
             o_file = open(output_file, 'a')
         for line in chan_stream:
@@ -54,7 +52,6 @@ class Cucumber:
                 o_file.write(line)
         if output_file:
             o_file.close()
-        print("try to understand 3")
         return chan.recv_exit_status()
 
     def copy_atime_mtime(self, remote_path, local_path):
