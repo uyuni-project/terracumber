@@ -290,9 +290,7 @@ def cucumber_run(args, tf_vars, ctl_creds, cmd):
     ctl = get_controller_hostname(args, tf_vars)
     ctl_creds['hostname'] = ctl
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
-    print("try to understand 0")
     result = cucumber.run_command(cmd, tf_vars, output_file=args.logfile)
-    print("try to understand 4")
     if result == 0:
         return True
     else:
