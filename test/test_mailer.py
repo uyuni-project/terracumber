@@ -1,10 +1,10 @@
 from email.mime.text import MIMEText
-
-import config
-import junit
-import mailer
+from terracumber import config
+from terracumber import junit
+from terracumber import mailer
+from terracumber import utils
 import unittest
-import utils
+
 
 class TestMailer(unittest.TestCase):
     def setUp(self):
@@ -16,7 +16,6 @@ class TestMailer(unittest.TestCase):
         self.template_data['timestamp'] = 1
 
     def test_fill_template(self):
-
         # Testsuite failures
         message_assert = MIMEText("""#################################################################
 # SUMMARY
@@ -43,7 +42,7 @@ failed Schedule some actions on the CentOS 7 traditional client
         junit_data = junit.Junit('test/resources/junit/failures')
         self.template_data['status'] = "FAILED"
         self.template_data['failures_log'] = '\n'.join(junit_data.get_failures(1))
-        self.template_data = utils.merge_two_dicts(self.template_data,junit_data.get_totals())
+        self.template_data = utils.merge_two_dicts(self.template_data, junit_data.get_totals())
 
         template = self.config['MAIL_TEMPLATE']
         subject = self.config['MAIL_SUBJECT']
@@ -79,7 +78,7 @@ Skipped: 0
         junit_data = junit.Junit('test/resources/junit/passed')
         self.template_data['status'] = "PASSED"
         self.template_data['failures_log'] = ''
-        self.template_data = utils.merge_two_dicts(self.template_data,junit_data.get_totals())
+        self.template_data = utils.merge_two_dicts(self.template_data, junit_data.get_totals())
 
         template = self.config['MAIL_TEMPLATE']
         subject = self.config['MAIL_SUBJECT']
