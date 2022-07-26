@@ -78,7 +78,7 @@ It is easy: just create a Pull Request with your contribution, and make sure tha
 To run them:
 
 ```bash
-cd terracumber; python3 -m unittest
+python3 -m unittest
 ```
 
-For now the unit tests only cover the module
+For now the unit tests only cover the module.

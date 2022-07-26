@@ -73,9 +73,12 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self):
-        """Run terraform apply"""
-        return self.__run_command([self.terraform_bin, "apply", "-auto-approve"])
+    def apply(self, parallelism=10):
+        """Run terraform apply
+
+        parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
+        """
+        return self.__run_command([self.terraform_bin, "apply", "-auto-approve", "-parallelism=%s" % parallelism])
 
     def destroy(self):
         """Run terraform destroy"""
