@@ -48,6 +48,9 @@ def parse_args():
                                           new module were added). Valid when using --runall or
                                           --runstep provision""",
                         action='store_true')
+    parser.add_argument('--parallelism', help="""Define the number of parallel resource operations during a 'terraform
+                                                 apply'.""",
+                        dest='parallelism', default=10, type=int)
     parser.add_argument('--terraform-bin', help='path to terraform bin that should be used',
                         default='/usr/bin/terraform')
     parser.add_argument('--nlines', help="""Number of lines to be attached to the email if errors

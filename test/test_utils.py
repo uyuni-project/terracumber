@@ -1,5 +1,6 @@
 import unittest
-import utils
+from terracumber import utils
+
 
 class TestUtils(unittest.TestCase):
     def test_merge_two_dicts(self):
@@ -34,6 +35,7 @@ class TestUtils(unittest.TestCase):
         dict_x = { }
         dict_y = { }
         self.assertDictEqual(utils.overwrite_dict(dict_x, dict_y), { })
+
 
 if __name__ == '__main__':
     unittest.main()

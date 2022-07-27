@@ -34,9 +34,9 @@ class Git:
                                                            auth['password'])
         elif 'private' in auth:
             self.credentials = pygit2.credentials.Keypair('git',
-                                                       auth['private'],
-                                                       auth['public'],
-                                                       auth['passphrase'])
+                                                          auth['private'],
+                                                          auth['public'],
+                                                          auth['passphrase'])
         else:
             self.credentials = pygit2.KeypairFromAgent('git')
         if not auto:
@@ -46,7 +46,6 @@ class Git:
             self.checkout()
         else:
             self.clone()
-
 
     def clone(self):
         """ Clone a repository to the specified folder """
@@ -58,7 +57,6 @@ class Git:
             # Maybe this is a tag
             self.repo.checkout('refs/tags/' + self.ref)
 
-
     def ref_is_tag(self):
         """ Check if the reference on the object is a tag
             This can only be checked on the local repository, so if
@@ -69,14 +67,12 @@ class Git:
             return True
         return False
 
-
     def is_remote(self):
         """ Check if a remote exits on a local repository """
         for remote in self.repo.remotes:
             if remote.url == self.url:
                 return remote.name
         return False
-
 
     def remove_all_tags(self):
         """ Remove all tags from a local repository """
@@ -87,13 +83,11 @@ class Git:
                 removed = True
         return removed
 
-
     def create_remote_from_url(self):
         """ Create a remote from URL on a local repository """
         remote_name = self.url.replace('/', '-').replace('.', '-').replace(':', '-')
         self.repo.remotes.create(remote_name, self.url)
         return remote_name
-
 
     def refresh_local_repo(self):
         """ Refresh a local repository, including remote change management when
@@ -111,10 +105,9 @@ class Git:
         # We need to force fetching pull requests as well, so than we
         # can checkout pr/PR/head where PR is the pull request number
         self.repo.remotes[remote].fetch(refspecs=['+refs/heads/*:refs/remotes/%s/*' % remote,
-            '+refs/tags/*:refs/remotes/%s/*' % remote,
-            '+refs/pull/*:refs/remotes/%s/pr/*' % remote])
+                                                  '+refs/tags/*:refs/remotes/%s/*' % remote,
+                                                  '+refs/pull/*:refs/remotes/%s/pr/*' % remote])
         return remote, remote_url
-
 
     def checkout(self):
         """ Checkout changes ignoring any local changes """
@@ -148,7 +141,7 @@ class Git:
         except KeyError as e:
             self.repo.create_reference(local_ref, remote_id)
             self.repo.checkout(local_ref)
-            local_id = repo.lookup_reference(local_ref)
+            local_id = self.repo.lookup_reference(local_ref)
         print("Performing hard reset to ignore local changes")
         self.repo.reset(local_id.target, pygit2.GIT_RESET_HARD)
         self.reset_hard = True
