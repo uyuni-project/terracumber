@@ -355,7 +355,7 @@ def main():
 
     if args.bastion_ssh_key:
         if get_bastion_hostname(args, tf_vars) and (
-                args.runstep == 'cucumber' or args.custom_repositories or args.runall):
+                args.runstep in ['cucumber', 'getresults'] or args.custom_repositories or args.runall):
             channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
             ctl_creds["sock"] = channel
 
