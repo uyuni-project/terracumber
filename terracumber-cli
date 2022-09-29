@@ -84,6 +84,8 @@ def parse_args():
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
     parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""", dest='bastion_ssh_key', default=None)
+    parser.add_argument('--bastion_user', help="""bastion user to be use""", dest='bastion_user', default='ec2-user')
+    parser.add_argument('--bastion_hostname', help="""bastion hostname to use""", dest='bastion_hostname', default=None)
 
     args = parser.parse_args()
     if args.runstep:
@@ -207,6 +209,8 @@ def get_controller_hostname(args, tf_vars):
 
 def get_bastion_hostname(args, tf_vars):
     """ Get bastion hostname """
+    if args.bastion_hostname:
+      return args.bastion_hostname
     try:
         terraform = terracumber.terraformer.Terraformer(
             args.gitfolder, args.tf, tf_vars, args.logfile)
@@ -333,7 +337,7 @@ def main():
     results = {}
     results = {'git': None, 'terraform': None,
                'cucumber': None, 'getresults': None, 'mail': None}
-    bastion_creds = {'hostname': None, 'username': 'ec2-user',
+    bastion_creds = {'hostname': None, 'username': args.bastion_user,
                      'port': 22, 'key_filename': args.bastion_ssh_key}
     if args.runall or args.runstep == 'gitsync':
         print("Cloning/Updating repository to/at %s..." % args.gitfolder)
@@ -351,7 +355,7 @@ def main():
 
     if args.bastion_ssh_key:
         if get_bastion_hostname(args, tf_vars) and (
-                args.runstep == 'cucumber' or args.custom_repositories or args.runall):
+                args.runstep in ['cucumber', 'getresults'] or args.custom_repositories or args.runall):
             channel = open_bastion_channel(args, tf_vars, bastion_creds, ctl_creds)
             ctl_creds["sock"] = channel
 
