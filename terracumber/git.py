@@ -52,7 +52,12 @@ class Git:
         self.cloning = True
         self.repo = pygit2.clone_repository(self.url, self.folder)
         try:
-            self.repo.checkout('refs/heads/' + self.ref)
+            remote_branch = self.repo.lookup_branch("origin/" + self.ref, pygit2.GIT_BRANCH_REMOTE)
+            if remote_branch:
+                branch_ref = self.repo.lookup_reference(remote_branch.name)
+                self.repo.checkout(branch_ref)
+            else:
+                self.repo.checkout('refs/heads/' + self.ref)
         except KeyError:
             # Maybe this is a tag
             self.repo.checkout('refs/tags/' + self.ref)
