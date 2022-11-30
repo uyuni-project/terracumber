@@ -51,7 +51,7 @@ class Terraformer:
                     node_mu_repos = repos.get(node, None)
                     replacement_list = ["additional_repos = {"]
                     for name, url in node_mu_repos.items():
-                        replacement_list.append('\n\t{}="{}",'.format(name, url))
+                        replacement_list.append('\n\t"{}"="{}",'.format(name, url))
                     replacement_list.append("\n}")
                     replacement = ''.join(replacement_list)
                     placeholder = '//' + node + '_additional_repos'
