@@ -215,7 +215,8 @@ def get_bastion_hostname(args, tf_vars):
         terraform = terracumber.terraformer.Terraformer(
             args.gitfolder, args.tf, tf_vars, args.logfile)
         return terraform.get_hostname('bastion')
-    except KeyError:
+    except (KeyError, FileNotFoundError)as error:
+        print(error)
         return None
 
 
