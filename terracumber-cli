@@ -325,6 +325,9 @@ def main():
         args.outputdir, template_data['timestamp'])
     if args.runall and dir_existed:
         print("WARNING: %s directory already exists!" % args.outputdir)
+    if not os.path.isfile(args.tf):
+        print("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
+        sys.exit(1)
     config = read_config(args.tf)
     if not config:
         sys.exit(1)
