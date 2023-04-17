@@ -33,7 +33,12 @@ No. It should work with any other environment as long as:
 - [pyhcl](https://pypi.org/project/pyhcl/) module installed
 - [paramiko](https://www.paramiko.org/) module installed
 - [pygit2](https://www.pygit2.org/) module installed
-- Terraform installed and configured as need to run the terraform templates you are going to use
+- Terraform
+
+`paramiko` is usually part of the base system packages. `pyhcl` and `pygit2` are packaged in the [Uyuni utils](https://download.opensuse.org/repositories/systemsmanagement:/Uyuni:/Utils/) repository.
+
+Terraform must be configured as needed to run the terraform templates you are going to use.
+
 
 ## Quickstart
 
