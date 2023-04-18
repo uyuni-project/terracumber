@@ -1,6 +1,6 @@
 """Run and manage terraform"""
 import fileinput
-from json import load
+from json import load, JSONDecodeError
 from os import environ, path, symlink, unlink
 from re import match, subn
 from shutil import copy
@@ -47,10 +47,14 @@ class Terraformer:
 
         Returns:
             0 if no error
-            1 if the main.tf has an incorrect number of placeholders
+            1 if the json is not well-formed
+            2 if the main.tf has an incorrect number of placeholders
         """ 
         if custom_repositories_json:
-            repos = load(custom_repositories_json)
+            try:
+                repos = load(custom_repositories_json)
+            except JSONDecodeError:
+                return 1
             n_replaced = 0
             for node in repos.keys():
                 if node == 'server':
@@ -66,7 +70,7 @@ class Terraformer:
                         print(new_line, end='')
                         n_replaced += n
             if n_replaced != 1:
-                return 1
+                return 2
         return 0
 
     def init(self):
