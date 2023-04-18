@@ -2,7 +2,7 @@
 import fileinput
 from json import load
 from os import environ, path, symlink, unlink
-from re import match
+from re import match, subn
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
@@ -43,9 +43,15 @@ class Terraformer:
                     '%s/modules/backend' % terraform_path)
 
     def inject_repos(self, custom_repositories_json):
-        """Set additional repositories into the main.tf, so they are injected by sumaform"""
+        """Set additional repositories into the main.tf, so they are injected by sumaform
+
+        Returns:
+            0 if no error
+            1 if the main.tf has an incorrect number of placeholders
+        """ 
         if custom_repositories_json:
             repos = load(custom_repositories_json)
+            n_replaced = 0
             for node in repos.keys():
                 if node == 'server':
                     node_mu_repos = repos.get(node, None)
@@ -56,7 +62,12 @@ class Terraformer:
                     replacement = ''.join(replacement_list)
                     placeholder = '//' + node + '_additional_repos'
                     for line in fileinput.input("%s/main.tf" % self.terraform_path, inplace=True):
-                        print(line.rstrip().replace(placeholder, replacement))
+                        (new_line, n) = subn(placeholder, replacement, line)
+                        print(new_line, end='')
+                        n_replaced += n
+            if n_replaced != 1:
+                return 1
+        return 0
 
     def init(self):
         """Run terraform init"""
