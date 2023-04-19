@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument('--parallelism', help="""Define the number of parallel resource operations during a 'terraform
                                                  apply'.""",
                         dest='parallelism', default=10, type=int)
-    parser.add_argument('--terraform-bin', help='path to terraform bin that should be used',
+    parser.add_argument('--terraform-bin', help='Path to the terraform binary that should be used',
                         default='/usr/bin/terraform')
     parser.add_argument('--nlines', help="""Number of lines to be attached to the email if errors
                                             are found (either lines from the log, or failed tests
@@ -72,10 +72,10 @@ def parse_args():
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
                         dest='cucumber_cmd', default=False)
-    parser.add_argument('--custom-repositories', help="""Path of a JSON file listing custom repositories per host.
-                                                         This trigger two actions:
-                                                         1) It includes an additional repository on the server via sumaform
-                                                         2) It copy the json file into a testsuide sub-folder inside the controller""",
+    parser.add_argument('--custom-repositories', help="""Path to a JSON file listing custom repositories per host.
+                                                         This triggers two actions:
+                                                         1) it includes an additional repository on the server via sumaform
+                                                         2) it copies the JSON file into a testsuite sub-folder inside the controller""",
                         dest='custom_repositories', default=None)
     # I think this is sumaform specific, in the future we should
     parser.add_argument('--sumaform-backend', help="""sumaform backend to be used. Only valid when using
@@ -83,9 +83,9 @@ def parse_args():
                                                       libvirt is used by default""",
                         choices=['libvirt', 'aws', 'null'], default="libvirt",
                         dest='sumaform_backend')
-    parser.add_argument('--bastion_ssh_key', help="""bastion key to be use""", dest='bastion_ssh_key', default=None)
-    parser.add_argument('--bastion_user', help="""bastion user to be use""", dest='bastion_user', default='ec2-user')
-    parser.add_argument('--bastion_hostname', help="""bastion hostname to use""", dest='bastion_hostname', default=None)
+    parser.add_argument('--bastion_ssh_key', help="""Bastion key to be use""", dest='bastion_ssh_key', default=None)
+    parser.add_argument('--bastion_user', help="""Bastion user to be use""", dest='bastion_user', default='ec2-user')
+    parser.add_argument('--bastion_hostname', help="""Bastion hostname to use""", dest='bastion_hostname', default=None)
 
     args = parser.parse_args()
     if args.runstep:
