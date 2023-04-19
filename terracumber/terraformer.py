@@ -55,7 +55,6 @@ class Terraformer:
                 repos = load(custom_repositories_json)
             except JSONDecodeError:
                 return 1
-            n_replaced = 0
             for node in repos.keys():
                 if node == 'server':
                     node_mu_repos = repos.get(node, None)
@@ -65,12 +64,13 @@ class Terraformer:
                     replacement_list.append("\n}")
                     replacement = ''.join(replacement_list)
                     placeholder = '//' + node + '_additional_repos'
+                    n_replaced = 0
                     for line in fileinput.input("%s/main.tf" % self.terraform_path, inplace=True):
                         (new_line, n) = subn(placeholder, replacement, line)
                         print(new_line, end='')
                         n_replaced += n
-            if n_replaced != 1:
-                return 2
+                    if n_replaced != 1:
+                        return 2
         return 0
 
     def init(self):
