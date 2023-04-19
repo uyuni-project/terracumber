@@ -314,10 +314,13 @@ def cucumber_run(args, tf_vars, ctl_creds, cmd):
 def cucumber_put(args, tf_vars, ctl_creds, src, dest):
     """ Copy a file on the controller """
     ctl = get_controller_hostname(args, tf_vars)
-    ctl_creds['hostname'] = ctl
-    ctl_creds['timeout'] = 300
-    cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
-    cucumber.put_file(src, dest)
+    if ctl is None:
+        print("WARNING: not injecting custom repositories to the controller, as it does not exist")
+    else:
+        ctl_creds['hostname'] = ctl
+        ctl_creds['timeout'] = 300
+        cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
+        cucumber.put_file(src, dest)
 
 
 def main():
