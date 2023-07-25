@@ -207,7 +207,7 @@ def run_terraform(args, tf_vars):
         terraform.taint(args.taint)
     if args.destroy:
         terraform.destroy(args.tfvars_files)
-    result = terraform.apply(args.parallelism, args.tfvars_files)
+    result = terraform.apply(args.parallelism)
     if result == 0:
         return True
     return False

@@ -30,8 +30,7 @@ class Terraformer:
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
-        self.variables_file = variables_file
-        self.tfvars_files = tfvars_files
+        self.tfvars_files = []
         if self.variables is None:
             self.variables = {}
         self.output_file = output_file
@@ -41,6 +40,7 @@ class Terraformer:
             copy(variables_file, terraform_path + '/variables.tf')
         for tfvars_file in tfvars_files:
             copy(tfvars_file, terraform_path)
+            self.tfvars_files.append(path.basename(tfvars_file))
         # Only if we are using a folder with folder structure used by sumaform
         if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
             if path.islink('%s/modules/backend' % terraform_path):
@@ -94,20 +94,20 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self, parallelism=10, tfvars_files=[]):
+    def apply(self, parallelism=10):
         """Run terraform apply
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
         """
         command_arguments = [self.terraform_bin, "apply", "-auto-approve", "-parallelism=%s" % parallelism]
-        for file in tfvars_files:
+        for file in self.tfvars_files:
             command_arguments.append("-var-file=%s" % file)
         return self.__run_command(command_arguments)
 
     def destroy(self, tfvars_files=[]):
         """Run terraform destroy"""
         command_arguments = [self.terraform_bin, "destroy", "-auto-approve"]
-        for file in tfvars_files:
+        for file in self.tfvars_files:
             command_arguments.append("-var-file=%s" % file)
         self.__run_command(command_arguments)
 
