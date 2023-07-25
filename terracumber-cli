@@ -105,9 +105,12 @@ def parse_args():
     return args
 
 
-def read_config(tf_file):
+def read_config(tf_file, tfvariables_file):
     """Read and validate the config from a tf file"""
-    config = terracumber.config.read_config(tf_file)
+    if tfvariables_file != '':
+        config = terracumber.config.read_config(tfvariables_file)
+    else:
+        config = terracumber.config.read_config(tf_file)
     for required in ['URL_PREFIX', 'CUCUMBER_COMMAND', 'CUCUMBER_BRANCH', 'CUCUMBER_RESULTS',
                      'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
                      'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
@@ -340,7 +343,7 @@ def main():
     if not os.path.isfile(args.tf):
         print("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
         sys.exit(1)
-    config = read_config(args.tf)
+    config = read_config(args.tf, args.tfvariables_file)
     if not config:
         sys.exit(1)
     tf_vars = get_tf_vars()
