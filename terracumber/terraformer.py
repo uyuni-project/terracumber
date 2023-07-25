@@ -3,7 +3,7 @@ import fileinput
 from json import load, JSONDecodeError
 from os import environ, path, symlink, unlink
 from re import match, subn
-from shutil import copy, copyfile
+from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
 # Fallback to allow running python3 -m unittest
@@ -40,7 +40,7 @@ class Terraformer:
         if path.isfile(variables_file):
             copy(variables_file, terraform_path + '/variables.tf')
         for tfvars_file in tfvars_files:
-            copyfile(tfvars_file, terraform_path)
+            copy(tfvars_file, terraform_path)
         # Only if we are using a folder with folder structure used by sumaform
         if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
             if path.islink('%s/modules/backend' % terraform_path):
