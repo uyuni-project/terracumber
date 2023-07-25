@@ -3,7 +3,7 @@ import fileinput
 from json import load, JSONDecodeError
 from os import environ, path, symlink, unlink
 from re import match, subn
-from shutil import copy
+from shutil import copy, copyfile
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
 # Fallback to allow running python3 -m unittest
@@ -26,15 +26,21 @@ class Terraformer:
     terraform_bin - path to terraform bin
     """
 
-    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform'):
+    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform', variables_file="", tfvars_files=[]):
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
+        self.variables_file = variables_file
+        self.tfvars_files = tfvars_files
         if self.variables is None:
             self.variables = {}
         self.output_file = output_file
         self.terraform_bin = terraform_bin
         copy(maintf, terraform_path + '/main.tf')
+        if path.isfile(variables_file):
+            copy(variables_file, terraform_path + '/variables.tf')
+        for tfvars_file in tfvars_files:
+            copyfile(tfvars_file, terraform_path)
         # Only if we are using a folder with folder structure used by sumaform
         if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
             if path.islink('%s/modules/backend' % terraform_path):
@@ -88,16 +94,22 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self, parallelism=10):
+    def apply(self, parallelism=10, tfvars_files=[]):
         """Run terraform apply
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
         """
-        return self.__run_command([self.terraform_bin, "apply", "-auto-approve", "-parallelism=%s" % parallelism])
+        command_arguments = [self.terraform_bin, "apply", "-auto-approve", "-parallelism=%s" % parallelism]
+        for file in tfvars_files:
+            command_arguments.append("-var-file=%s" % file)
+        return self.__run_command(command_arguments)
 
-    def destroy(self):
+    def destroy(self, tfvars_files=[]):
         """Run terraform destroy"""
-        self.__run_command([self.terraform_bin, "destroy", "-auto-approve"])
+        command_arguments = [self.terraform_bin, "destroy", "-auto-approve"]
+        for file in tfvars_files:
+            command_arguments.append("-var-file=%s" % file)
+        self.__run_command(command_arguments)
 
     def get_hostname(self, resource):
         """Get a hostname for an instance from the tfstate file"""

@@ -20,6 +20,8 @@ def parse_args():
     """Parse arguments"""
     parser = argparse.ArgumentParser(description='Run terrafrom and cucumber')
     parser.add_argument('--tf', help='Path to main.tf file', required=True)
+    parser.add_argument('--tfvars_files', help='Collection of tfvars files path', required=False, default=[])
+    parser.add_argument('--tfvariable', help='Path to variable.tf file', required=False)
     parser.add_argument('--gitrepo',
                         help='URL to the git repository containing terraform definitions',
                         default='https://github.com/uyuni-project/sumaform.git')
@@ -199,8 +201,8 @@ def run_terraform(args, tf_vars):
     if args.taint:
         terraform.taint(args.taint)
     if args.destroy:
-        terraform.destroy()
-    result = terraform.apply()
+        terraform.destroy(args.tfvars_files)
+    result = terraform.apply(args.parallelism, args.tfvars_files)
     if result == 0:
         return True
     return False
