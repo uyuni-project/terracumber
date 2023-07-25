@@ -23,7 +23,8 @@ def parse_args():
     parser.add_argument('--tf_configuration_files', action='append', help='Path to terraform configuration file ('
                                                                           'tfvars)', required=False,
                         default=[])
-    parser.add_argument('--tf_variables_description_file', help='Path to variables description file (variables.tf)', required=False, default='')
+    parser.add_argument('--tf_variables_description_file', help='Path to variables description file (variables.tf)',
+                        required=False, default='')
     parser.add_argument('--gitrepo',
                         help='URL to the git repository containing terraform definitions',
                         default='https://github.com/uyuni-project/sumaform.git')
