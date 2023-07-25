@@ -20,7 +20,8 @@ def parse_args():
     """Parse arguments"""
     parser = argparse.ArgumentParser(description='Run terrafrom and cucumber')
     parser.add_argument('--tf', help='Path to main.tf file', required=True)
-    parser.add_argument('--tfvars_files', help='Collection of tfvars files path', required=False, default=[])
+    parser.add_argument('--tfvars_files', action='append', help='Collection of tfvars files path', required=False,
+                        default=[])
     parser.add_argument('--tfvariables_file', help='Path to variable.tf file', required=False, default='')
     parser.add_argument('--gitrepo',
                         help='URL to the git repository containing terraform definitions',
