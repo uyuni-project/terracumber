@@ -26,7 +26,7 @@ class Terraformer:
     terraform_bin - path to terraform bin
     """
 
-    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform', variables_declaration_file="", tfvars_files=[]):
+    def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform', variables_description_file="", tfvars_files=[]):
         self.terraform_path = terraform_path
         self.maintf = maintf
         self.variables = variables
@@ -36,8 +36,8 @@ class Terraformer:
         self.output_file = output_file
         self.terraform_bin = terraform_bin
         copy(maintf, terraform_path + '/main.tf')
-        if path.isfile(variables_declaration_file):
-            copy(variables_declaration_file, terraform_path + '/variables.tf')
+        if path.isfile(variables_description_file):
+            copy(variables_description_file, terraform_path + '/variables.tf')
         for tfvars_file in tfvars_files:
             copy(tfvars_file, terraform_path)
             self.tfvars_files.append(path.basename(tfvars_file))
