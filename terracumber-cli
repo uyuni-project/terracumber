@@ -209,7 +209,7 @@ def run_terraform(args, tf_vars):
 def get_controller_hostname(args, tf_vars):
     """ Get controller hostname """
     terraform = terracumber.terraformer.Terraformer(
-        args.gitfolder, args.tf, tf_vars, args.logfile)
+        args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
     return terraform.get_hostname('controller')
 
 
@@ -219,7 +219,7 @@ def get_bastion_hostname(args, tf_vars):
       return args.bastion_hostname
     try:
         terraform = terracumber.terraformer.Terraformer(
-            args.gitfolder, args.tf, tf_vars, args.logfile)
+            args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
         return terraform.get_hostname('bastion')
     except (KeyError, FileNotFoundError) as error:
         print(error)
