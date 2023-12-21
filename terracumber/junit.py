@@ -58,3 +58,23 @@ class Junit:
                 else:
                     break
         return failures
+
+    def get_failures_saltshaker(self, number=-1):
+        """Return a list of failure messages for failed tests from Salt Shaker.
+
+        Keyword arguments:
+        number: The maximum number of messages to return, -1 for all messages
+        """
+        failures = []
+        for tfile in self.sort_test_files_by_mtime():
+            j_failures = minidom.parse(tfile).getElementsByTagName('failure')
+            for j_failure in j_failures:
+                if len(failures) < number or number == -1:
+                    failures.append("{}::{}".format(
+                        j_failure.parentNode.attributes['classname'].value,
+                        j_failure.parentNode.attributes['name'].value,
+                        )
+                    )
+                else:
+                    break
+        return failures
