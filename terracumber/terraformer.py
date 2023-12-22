@@ -113,17 +113,15 @@ class Terraformer:
                     return value[resource]['hostname']
         return None
 
-    def get_single_node_hostname(self):
+    def get_single_node_ipaddr(self):
         """Get the hostname for a single node from tfstate file"""
         with open(self.terraform_path + '/terraform.tfstate', 'r') as tf_state:
             j = load(tf_state)
             # This seems to be sumaform specific. I wonder if there is
             # a way of making this generic :-(
             value = j['outputs']['configuration']['value']
-            if 'hostnames' in value.keys():
-                return value['hostnames'][0]
-            if 'hostname' in value.keys():
-                return value['hostname']
+            if 'ipaddrs' in value.keys():
+                return value['ipaddrs'][0][0]
         return None
 
     def __get_resources(self, what=None):
