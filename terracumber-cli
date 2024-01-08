@@ -67,7 +67,8 @@ def parse_args():
                                              either environment variable BUILD_NUMBER from Jenkins
                                              or BUILD_TIMESTAMP variable (manually managed) must be
                                              exported""",
-                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail', 'saltshaker', 'saltshaker_getresults', 'saltshaker_mail'], default=False)
+                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail',
+                                 'saltshaker', 'saltshaker_getresults', 'saltshaker_mail'], default=False)
     parser.add_argument('--cucumber-cmd', help="""The full and arbitrary command to be run for
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
@@ -214,7 +215,7 @@ def run_terraform(args, tf_vars):
 
 
 def get_saltshaker_ipaddr(args, tf_vars):
-    """ Get controller hostname """
+    """ Get ip address from salt shaker node"""
     terraform = terracumber.terraformer.Terraformer(
         args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
     return terraform.get_single_node_ipaddr()
@@ -266,7 +267,7 @@ def get_results(args, tf_vars, config, ctl_creds):
 
 
 def get_results_saltshaker(args, tf_vars, config, ctl_creds):
-    """ Get results from the controller after a cucumber execution """
+    """ Get results from the salt shaker node after a pytest execution """
     ctl = get_saltshaker_ipaddr(args, tf_vars)
     ctl_creds['hostname'] = ctl
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
