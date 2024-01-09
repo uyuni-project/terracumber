@@ -108,6 +108,24 @@ class TestGit(unittest.TestCase):
             # Assert
             mock_run_command.assert_called_with(["/usr/bin/terraform", "apply", "-auto-approve", "-parallelism=20"])
 
+@patch('terracumber.terraformer.copy')
+@patch('terracumber.terraformer.path')
+@patch('terracumber.terraformer.symlink')
+@patch('terracumber.terraformer.unlink')
+class TestTerraformerSaltShaker(unittest.TestCase):
+    def setUp(self):
+        self.terraform_path = 'test/resources/salt-shaker'
+        self.maintf = 'test/resources/salt-shaker/test-salt-shaker.tf'
+        self.backend = 'libvirt'
+
+    def test_get_single_node_ipaddr(self, mock_unlink, mock_symlink, mock_path, mock_copy):
+        # Test an invalid machine
+        self.terraformer = terraformer.Terraformer(self.terraform_path, self.maintf, self.backend)
+        self.assertEqual(self.terraformer.get_single_node_ipaddr(), '192.168.122.100')
+        # Test a valid machine
+        self.terraformer = terraformer.Terraformer('/tmp', self.maintf, self.backend)
+        with self.assertRaises(FileNotFoundError):
+            self.assertIsNone(self.terraformer.get_single_node_ipaddr())
 
 if __name__ == '__main__':
     unittest.main()
