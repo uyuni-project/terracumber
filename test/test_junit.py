@@ -32,5 +32,19 @@ class TestJunit(unittest.TestCase):
         self.assertListEqual(self.junit.get_failures(number=0), [])
 
 
+class TestJunitSaltShaker(unittest.TestCase):
+    def setUp(self):
+        self.junit = junit.Junit('test/resources/junit/salt-shaker/failures')
+
+    def test_get_failures_saltshaker(self):
+        failure_messages = [
+            "test.test_junit.TestJunit::test_sort_test_files_by_mtime",
+            "test.test_junit.TestJunitSaltShaker::test_get_failures",
+        ]
+        self.assertListEqual(self.junit.get_failures_saltshaker(), failure_messages)
+        self.assertListEqual(self.junit.get_failures_saltshaker(number=1), failure_messages[0:1])
+        self.assertListEqual(self.junit.get_failures_saltshaker(number=0), [])
+
+
 if __name__ == '__main__':
     unittest.main()
