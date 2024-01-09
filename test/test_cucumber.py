@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 
-class TestGit(unittest.TestCase):
+class TestCucumber(unittest.TestCase):
     def setUp(self):
         self.conn_data = {'hostname': None, 'username': 'root', 'port': 22, 'password': 'linux'}
 

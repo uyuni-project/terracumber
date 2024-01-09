@@ -8,7 +8,7 @@ from unittest.mock import patch
 @patch('terracumber.terraformer.path')
 @patch('terracumber.terraformer.symlink')
 @patch('terracumber.terraformer.unlink')
-class TestGit(unittest.TestCase):
+class TestTerraformer(unittest.TestCase):
     def setUp(self):
         self.terraform_path = 'test/resources'
         self.maintf = 'test/resources/test.tf'
