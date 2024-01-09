@@ -8,13 +8,13 @@ class TestJunit(unittest.TestCase):
 
     def test_sort_test_files_by_mtime(self):
         file_list = [
-            'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml',
             'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_with_tool.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml']
+            'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
+            'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml']
         self.maxDiff = None
         self.assertListEqual(self.junit.sort_test_files_by_mtime(), file_list)
 
