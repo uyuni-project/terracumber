@@ -69,3 +69,33 @@ If you want to start again, run the `gitsync` step if you want to fetch changes,
 ```
 ./terracumber-cli --tf examples/main.tf-jenkins.mycopy --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/sumaform.log  --gitfolder /tmp/sumaform  --runstep provision --taint '.*(domain|main_disk).*'
 ```
+
+# Salt Shaker executions
+The same `gitsync`, `provision` steps detailed above also apply when running Salt Shaker, then you have the following steps that are only for Salt Shaker:
+
+Run Salt Shaker unit tests:
+```
+./terracumber-cli --tf examples/main.tf-salt-shaker --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/testsuite.log --gitfolder /tmp/sumaform --runstep saltshaker --saltshaker-cmd "/usr/bin/salt-test --package-flavor bundle --skiplist https://raw.githubusercontent.com/openSUSE/salt-test-skiplist/main/skipped_tests.toml unit -- --core-tests --ssh-tests --slow-tests --run-expensive --run-destructive --junitxml /root/results_junit/junit-report-unit.xml -vvv --tb=native"
+```
+
+Run Salt Shaker integration tests:
+```
+./terracumber-cli --tf examples/main.tf-salt-shaker --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/testsuite.log --gitfolder /tmp/sumaform --runstep saltshaker --saltshaker-cmd "/usr/bin/salt-test --package-flavor bundle --skiplist https://raw.githubusercontent.com/openSUSE/salt-test-skiplist/main/skipped_tests.toml integration -- --core-tests --ssh-tests --slow-tests --run-expensive --run-destructive --junitxml /root/results_junit/junit-report-integration.xml -vvv --tb=native"
+```
+
+Run Salt Shaker functional tests:
+```
+./terracumber-cli --tf examples/main.tf-salt-shaker --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/testsuite.log --gitfolder /tmp/sumaform --runstep saltshaker --saltshaker-cmd "/usr/bin/salt-test --package-flavor bundle --skiplist https://raw.githubusercontent.com/openSUSE/salt-test-skiplist/main/skipped_tests.toml functional -- --core-tests --ssh-tests --slow-tests --run-expensive --run-destructive --junitxml /root/results_junit/junit-report-functional.xml -vvv --tb=native"
+```
+
+**NOTE:** You can use `--package-flavor classic` when triggering the Salt Shaker in order to test using the classic Salt package instead of the Salt Bundle.
+
+When you are done with the Salt Shaker tests, get the results:
+```
+./terracumber-cli --tf examples/main.tf-salt-shaker --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/testsuite.log --gitfolder /tmp/sumaform --runstep saltshaker_getresults
+```
+
+And, finally, send an email (optional):
+```
+./terracumber-cli --tf examples/main.tf-salt-shaker --outputdir /tmp/sumaform_outputs --logfile /tmp/sumaform/testsuite.log --gitfolder /tmp/sumaform --runstep saltshaker_mail
+```

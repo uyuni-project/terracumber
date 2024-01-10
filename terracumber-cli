@@ -71,11 +71,16 @@ def parse_args():
                                              either environment variable BUILD_NUMBER from Jenkins
                                              or BUILD_TIMESTAMP variable (manually managed) must be
                                              exported""",
-                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail'], default=False)
+                        choices=['gitsync', 'provision', 'cucumber', 'getresults', 'mail',
+                                 'saltshaker', 'saltshaker_getresults', 'saltshaker_mail'], default=False)
     parser.add_argument('--cucumber-cmd', help="""The full and arbitrary command to be run for
                                                   cucumber testing. Mandatory with
                                                   --runstep cucumber""",
                         dest='cucumber_cmd', default=False)
+    parser.add_argument('--saltshaker-cmd', help="""The full and arbitrary command to be run for
+                                                  Salt Shaker testing. Mandatory with
+                                                  --runstep saltshaker""",
+                        dest='saltshaker_cmd', default=False)
     parser.add_argument('--custom-repositories', help="""Path to a JSON file listing custom repositories per host.
                                                          This triggers two actions:
                                                          1) it includes an additional repository on the server via sumaform
@@ -95,6 +100,9 @@ def parse_args():
     if args.runstep:
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
             print("--runstep cucumber requires --cucumber-cmd")
+            return False
+        if args.runstep == 'saltshaker' and not args.saltshaker_cmd:
+            print("--runstep saltshaker requires --saltshaker-cmd")
             return False
         if not 'BUILD_TIMESTAMP' in os.environ and not 'BUILD_NUMBER' in os.environ:
             print("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
@@ -214,10 +222,17 @@ def run_terraform(args, tf_vars):
     return False
 
 
+def get_saltshaker_ipaddr(args, tf_vars):
+    """ Get ip address from salt shaker node"""
+    terraform = terracumber.terraformer.Terraformer(
+        args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
+    return terraform.get_single_node_ipaddr()
+
+
 def get_controller_hostname(args, tf_vars):
     """ Get controller hostname """
     terraform = terracumber.terraformer.Terraformer(
-        args.gitfolder, args.tf, tf_vars, args.logfile)
+        args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
     return terraform.get_hostname('controller')
 
 
@@ -227,7 +242,7 @@ def get_bastion_hostname(args, tf_vars):
       return args.bastion_hostname
     try:
         terraform = terracumber.terraformer.Terraformer(
-            args.gitfolder, args.tf, tf_vars, args.logfile)
+            args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
         return terraform.get_hostname('bastion')
     except (KeyError, FileNotFoundError) as error:
         print(error)
@@ -259,12 +274,29 @@ def get_results(args, tf_vars, config, ctl_creds):
     return True
 
 
-def send_mail(args, config, template_data=None, cucumber=None):
+def get_results_saltshaker(args, tf_vars, config, ctl_creds):
+    """ Get results from the salt shaker node after a pytest execution """
+    ctl = get_saltshaker_ipaddr(args, tf_vars)
+    ctl_creds['hostname'] = ctl
+    cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
+    directories = ['results_junit']
+    for copydir in directories:
+        try:
+            cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
+                                   '%s/%s' % (args.outputdir, copydir))
+        except FileNotFoundError:
+            print("Remote directory %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
+                                                             copydir))
+    return True
+
+
+def send_mail(args, config, template_data=None, cucumber=None, saltshaker=None):
     """ Send email with the results """
     template_data['urlprefix'] = config['URL_PREFIX']
     junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
     if cucumber is not None or (os.listdir(args.outputdir) and junit.get_totals() is not None):
         junit = terracumber.junit.Junit('%s/results_junit' % args.outputdir)
+        get_failures_func = junit.get_failures if saltshaker is None else junit.get_failures_saltshaker
         with open(os.path.join(args.outputdir, "total_result.json"), 'w') as jtotal:
             totals = junit.get_totals()
             totals['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -272,7 +304,7 @@ def send_mail(args, config, template_data=None, cucumber=None):
         # For that case when we send the email as standalone step, calculate
         # cucumber result from junit outputs
         if cucumber is None:
-            if len(junit.get_failures(-1)) != 0:
+            if len(get_failures_func(-1)) != 0:
                 cucumber = False
             else:
                 cucumber = True
@@ -284,7 +316,7 @@ def send_mail(args, config, template_data=None, cucumber=None):
         else:
             template_data['failures_log'] += ':\n'
         template_data['failures_log'] += '\n'.join(
-            junit.get_failures(args.nlines))
+            get_failures_func(args.nlines))
         template_data['urlprefix'] = config['URL_PREFIX']
         template = config['MAIL_TEMPLATE']
         subject = config['MAIL_SUBJECT']
@@ -331,6 +363,18 @@ def cucumber_put(args, tf_vars, ctl_creds, src, dest):
         cucumber.put_file(src, dest)
 
 
+def saltshaker_run(args, tf_vars, ctl_creds, cmd):
+    """ Run a command on the salt shaker node """
+    ctl = get_saltshaker_ipaddr(args, tf_vars)
+    ctl_creds['hostname'] = ctl
+    cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
+    result = cucumber.run_command(cmd, tf_vars, output_file=args.logfile)
+    if result == 0:
+        return True
+    else:
+        return False
+
+
 def main():
     """Main function"""
     args = parse_args()
@@ -357,7 +401,7 @@ def main():
                  'port': 22, 'password': 'linux', 'sock': None}
     results = {}
     results = {'git': None, 'terraform': None,
-               'cucumber': None, 'getresults': None, 'mail': None}
+               'output-tests': None, 'getresults': None, 'mail': None}
     bastion_creds = {'hostname': None, 'username': args.bastion_user,
                      'port': 22, 'key_filename': args.bastion_ssh_key}
     if args.runall or args.runstep == 'gitsync':
@@ -373,6 +417,14 @@ def main():
     if args.runall or args.runstep == 'provision':
         print("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
+
+    if args.runstep == 'saltshaker':
+        print("Running Salt Shaker tests...")
+        if args.saltshaker_cmd:
+            cmd = args.saltshaker_cmd
+        else:
+            cmd = config['CUCUMBER_COMMAND']
+        results['output-tests'] = saltshaker_run(args, tf_vars, ctl_creds, cmd)
 
     if args.bastion_ssh_key:
         if get_bastion_hostname(args, tf_vars) and (
@@ -392,16 +444,25 @@ def main():
             cmd = args.cucumber_cmd
         else:
             cmd = config['CUCUMBER_COMMAND']
-        results['cucumber'] = cucumber_run(args, tf_vars, ctl_creds, cmd)
+        results['output-tests'] = cucumber_run(args, tf_vars, ctl_creds, cmd)
 
-    if (args.runall and results['cucumber']) or args.runstep == 'getresults':
+    if (args.runall and results['output-tests']) or args.runstep == 'getresults':
         print("Fetching files from controller to %s..." % args.outputdir)
         results['results'] = get_results(args, tf_vars, config, ctl_creds)
+
+    if args.runstep == 'saltshaker_getresults':
+        print("Fetching files from Salt Shaker node to %s..." % args.outputdir)
+        results['results'] = get_results_saltshaker(args, tf_vars, config, ctl_creds)
 
     if args.runall or args.runstep == 'mail':
         print("Preparing and sending email")
         results['mail'] = send_mail(
-            args, config, template_data, results['cucumber'])
+            args, config, template_data, results['output-tests'])
+
+    if args.runstep == 'saltshaker_mail':
+        print("Preparing and sending email for Salt Shaker")
+        results['mail'] = send_mail(
+            args, config, template_data, results['output-tests'], saltshaker=True)
 
     for key, val in results.items():
         if val not in [None, True]:

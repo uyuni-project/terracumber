@@ -2,7 +2,7 @@
 
 When [Terraform](https://www.terraform.io/) meets [Cucumber](https://cucumber.io/).
 
-This is exactly what [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](https://www.suse.com/products/suse-manager/) are using for part of the testing. We create an environment with terraform (sumaform) and then we run tests with Cucumber.
+This is exactly what [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](https://www.suse.com/products/suse-manager/) are using for part of the testing. We create an environment with terraform (sumaform) and then we run tests with Cucumber. Alternatively, terracumber can be also used to run Salt tests with [Salt Shaker](https://github.com/openSUSE/salt-test).
 
 Until [SUSE's Hackweek 18](https://hackweek.suse.com/projects/terracumber-python-replacement-for-sumaform-test-runner) we were using a set of bash scripts, completely ad-hoc and hard to maintain and extend, and that is how Terracumber was born.
 
@@ -21,6 +21,9 @@ No. It should work with any other environment as long as:
      - `screenshots`
      - `cucumber_report`
      - `logs`
+     - `results_junit`
+4. The Salt Shaker run produces one or more of the following outputs **[1]**:
+   * Directories:
      - `results_junit`
 
 **[1]** We hope to make this configurable in the future.

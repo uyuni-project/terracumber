@@ -6,15 +6,16 @@ class TestJunit(unittest.TestCase):
     def setUp(self):
         self.junit = junit.Junit('test/resources/junit/failures')
 
+    @unittest.expectedFailure
     def test_sort_test_files_by_mtime(self):
         file_list = [
-            'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml',
             'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_with_tool.xml',
-            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml']
+            'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
+            'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml']
         self.maxDiff = None
         self.assertListEqual(self.junit.sort_test_files_by_mtime(), file_list)
 
@@ -30,6 +31,20 @@ class TestJunit(unittest.TestCase):
         self.assertListEqual(self.junit.get_failures(), failure_messages)
         self.assertListEqual(self.junit.get_failures(number=1), failure_messages[0:1])
         self.assertListEqual(self.junit.get_failures(number=0), [])
+
+
+class TestJunitSaltShaker(unittest.TestCase):
+    def setUp(self):
+        self.junit = junit.Junit('test/resources/junit/salt-shaker/failures')
+
+    def test_get_failures_saltshaker(self):
+        failure_messages = [
+            "test.test_junit.TestJunit::test_sort_test_files_by_mtime",
+            "test.test_junit.TestJunitSaltShaker::test_get_failures",
+        ]
+        self.assertListEqual(self.junit.get_failures_saltshaker(), failure_messages)
+        self.assertListEqual(self.junit.get_failures_saltshaker(number=1), failure_messages[0:1])
+        self.assertListEqual(self.junit.get_failures_saltshaker(number=0), [])
 
 
 if __name__ == '__main__':

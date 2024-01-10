@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="4" time="0.056" timestamp="2024-01-09T13:13:59.751601" hostname="linux-8iji"><testcase classname="test.test_junit.TestJunit" name="test_get_failures" time="0.010" /><testcase classname="test.test_junit.TestJunit" name="test_get_totals" time="0.004" /><testcase classname="test.test_junit.TestJunit" name="test_sort_test_files_by_mtime" time="0.003"><failure message="AssertionError: Lists differ: ['tes[46 chars]dary-srv_delete_channel_from_ui.xml', 'test/re[485 chars]xml'] != ['tes[46 chars]dary-trad_centos_client.xml', 'test/resources/[485 chars]xml']&#10;&#10;First differing element 0:&#10;'test[18 chars]ailures/TEST-features-secondary-srv_delete_channel_from_ui.xml'&#10;'test[18 chars]ailures/TEST-features-secondary-trad_centos_client.xml'&#10;&#10;+ ['test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml',&#10;+  'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',&#10;- ['test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml',&#10;? ^                                                           ^ -------------- ^^^^^&#10;&#10;+  'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',&#10;? ^                                                           ^^  ^&#10;&#10;+  'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',&#10;+  'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',&#10;   'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_with_tool.xml',&#10;-  'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',&#10;?                                                             ^^^ ^ ^  ^^  ^^^     ^&#10;&#10;+  'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml']&#10;?                                                             ^ ^^^^ ^^  ^ +++++ ^^^     ^&#10;&#10;-  'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',&#10;-  'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',&#10;-  'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',&#10;-  'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml']">self = &lt;test.test_junit.TestJunit testMethod=test_sort_test_files_by_mtime&gt;
+
+    def test_sort_test_files_by_mtime(self):
+        file_list = [
+            'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_with_tool.xml',
+            'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml']
+        self.maxDiff = None
+&gt;       self.assertListEqual(self.junit.sort_test_files_by_mtime(), file_list)
+E       AssertionError: Lists differ: ['tes[46 chars]dary-srv_delete_channel_from_ui.xml', 'test/re[485 chars]xml'] != ['tes[46 chars]dary-trad_centos_client.xml', 'test/resources/[485 chars]xml']
+E       
+E       First differing element 0:
+E       'test[18 chars]ailures/TEST-features-secondary-srv_delete_channel_from_ui.xml'
+E       'test[18 chars]ailures/TEST-features-secondary-trad_centos_client.xml'
+E       
+E       + ['test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml',
+E       +  'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
+E       - ['test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml',
+E       ? ^                                                           ^ -------------- ^^^^^
+E       
+E       +  'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
+E       ? ^                                                           ^^  ^
+E       
+E       +  'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
+E       +  'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+E          'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_with_tool.xml',
+E       -  'test/resources/junit/failures/TEST-features-secondary-srv_power_management.xml',
+E       ?                                                             ^^^ ^ ^  ^^  ^^^     ^
+E       
+E       +  'test/resources/junit/failures/TEST-features-secondary-srv_delete_channel_from_ui.xml']
+E       ?                                                             ^ ^^^^ ^^  ^ +++++ ^^^     ^
+E       
+E       -  'test/resources/junit/failures/TEST-features-secondary-srv_test_maintenance_windows.xml',
+E       -  'test/resources/junit/failures/TEST-features-secondary-srv_users.xml',
+E       -  'test/resources/junit/failures/TEST-features-secondary-srv_virtual_host_manager.xml',
+E       -  'test/resources/junit/failures/TEST-features-secondary-trad_centos_client.xml']
+
+test/test_junit.py:19: AssertionError</failure></testcase><testcase classname="test.test_junit.TestJunitSaltShaker" name="test_get_failures" time="0.001"><failure message="AssertionError: Lists differ: [] != ['failed Schedule some actions on the Cent[168 chars]nel']&#10;&#10;Second list contains 3 additional elements.&#10;First extra element 0:&#10;'failed Schedule some actions on the CentOS 7 traditional client'&#10;&#10;- []&#10;+ ['failed Schedule some actions on the CentOS 7 traditional client',&#10;+  'failed Cleanup: bootstrap a CentOS minion after traditional client tests',&#10;+  'failed Cleanup: re-subscribe the new CentOS minion to a base channel']">self = &lt;test.test_junit.TestJunitSaltShaker testMethod=test_get_failures&gt;
+
+    def test_get_failures(self):
+        failure_messages = [
+            "failed Schedule some actions on the CentOS 7 traditional client",
+            "failed Cleanup: bootstrap a CentOS minion after traditional client tests",
+            "failed Cleanup: re-subscribe the new CentOS minion to a base channel"]
+&gt;       self.assertListEqual(self.junit.get_failures(), failure_messages)
+E       AssertionError: Lists differ: [] != ['failed Schedule some actions on the Cent[168 chars]nel']
+E       
+E       Second list contains 3 additional elements.
+E       First extra element 0:
+E       'failed Schedule some actions on the CentOS 7 traditional client'
+E       
+E       - []
+E       + ['failed Schedule some actions on the CentOS 7 traditional client',
+E       +  'failed Cleanup: bootstrap a CentOS minion after traditional client tests',
+E       +  'failed Cleanup: re-subscribe the new CentOS minion to a base channel']
+
+test/test_junit.py:44: AssertionError</failure></testcase></testsuite></testsuites>
