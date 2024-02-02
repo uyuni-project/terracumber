@@ -45,7 +45,7 @@ Terraform must be configured as needed to run the terraform templates you are go
 
 ## Quickstart
 
-See [EXAMPLE.md](EXAMPLE.md) for a quick intro about the calls to `terraform-cli` 
+See [EXAMPLE.md](EXAMPLE.md) for a quick intro about the calls to `terracumber-cli`
 
 
 ## Advanced usage
@@ -56,7 +56,7 @@ You will need to create at least one `.tf` file to use it to launch your environ
 
 Keep in mind:
 1. There are some mandatory variables for the `.tf` file (see one of the [examples](examples/)
-2. You can add extra variables to your `.tf` file, so you can use it when creating the environment. Those variables will need to be exported before running `terraform-cli` as `TF_VAR_`, as explained at the [terraform doc](https://learn.hashicorp.com/terraform/getting-started/variables.html#from-environment-variables). Our example adds SCC credentials to pass them to Uyuni/SUSE Manager, and GitHub credentials to use them to clone the GitHub cucumber repository **[1]**
+2. You can add extra variables to your `.tf` file, so you can use it when creating the environment. Those variables will need to be exported before running `terracumber-cli` as `TF_VAR_`, as explained at the [terraform doc](https://learn.hashicorp.com/terraform/getting-started/variables.html#from-environment-variables). Our example adds SCC credentials to pass them to Uyuni/SUSE Manager, and GitHub credentials to use them to clone the GitHub cucumber repository **[1]**
 
 **[1]** To clone your terraform repository, it is allowed to use `TF_VAR_GIT_USER` and `TF_VAR_GIT_PASSWORD` instead of `--gituser` and `--gitpassword`, in case you do not want the credentials visible at the list of processes. If you use both the environment and the variables, then the parameters will be used to clone the terraform repository, and the variables to clone the cucumber repository at the controller.
 
@@ -64,20 +64,20 @@ Keep in mind:
 
 You need to create two email templates, one to be used when the environment fails to be created, the other to be used after cucumber is able to run.
 
-The email templates are plain text files with some variables to be replaced by `terraform-cli`:
+The email templates are plain text files with some variables to be replaced by `terracumber-cli`:
 
 * `$urlprefix` - Directly from your `.tf` file, from variable `URL_PREFIX`
-* `$timestamp` - Either the environment variable `BUILD_NUMBER` provided by Jenkins, or a timestamp in format `%Y-%m-%d-%H-%M-%S` otherwise (corresponding to the time and date when `terraform-cli` started.
+* `$timestamp` - Either the environment variable `BUILD_NUMBER` provided by Jenkins, or a timestamp in format `%Y-%m-%d-%H-%M-%S` otherwise (corresponding to the time and date when `terracumber-cli` started.
 * `$tests` - Total number of tests executed by cucumber
 * `$passed` - Number of tests executed by cucumber without failures or errors
 * `$failures` - Number of tests executed by cucumber with failures
 * `$errors` - Number of tests executed by cucumber with errors
 * `$skipped` - Number of tests skipped by cucumber
-* `$failures_log` - A list of failed tests, the number of failures is determined by `terraform-cli` `--nlines` parameter
+* `$failures_log` - A list of failed tests, the number of failures is determined by `terracumber-cli` `--nlines` parameter
 
 # Bonus: clean old results
 
-The script `clean-old-results` can be used to get rid of undesired old results (use `-h` to get help) 
+The script `clean-old-results` can be used to get rid of undesired old results (use `-h` to get help)
 
 # How to contribute
 
