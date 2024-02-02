@@ -6,7 +6,7 @@ This is exactly what [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](
 
 Until [SUSE's Hackweek 18](https://hackweek.suse.com/projects/terracumber-python-replacement-for-sumaform-test-runner) we were using a set of bash scripts, completely ad-hoc and hard to maintain and extend, and that is how Terracumber was born.
 
-# Does this only work with sumaform?
+## Does this only work with sumaform?
 
 No. It should work with any other environment as long as:
 
@@ -28,11 +28,11 @@ No. It should work with any other environment as long as:
 
 **[1]** We hope to make this configurable in the future.
 
-# How should I use it?
+## How should I use it?
 
-## Software requirements
+### Software requirements
 
-- Python3
+- Python 3
 - [pyhcl](https://pypi.org/project/pyhcl/) module installed
 - [paramiko](https://www.paramiko.org/) module installed
 - [pygit2](https://www.pygit2.org/) module installed
@@ -42,19 +42,18 @@ No. It should work with any other environment as long as:
 
 Terraform must be configured as needed to run the terraform templates you are going to use.
 
-
-## Quickstart
+### Quickstart
 
 See [EXAMPLE.md](EXAMPLE.md) for a quick intro about the calls to `terracumber-cli`
-
 
 ## Advanced usage
 
 ### Create/adjust your .tf file
 
-You will need to create at least one `.tf` file to use it to launch your environment, as well as configuring everything else (such as what command to run for the testsuite).
+You will need to create at least one `.tf` file to use it to launch your environment, as well as configuring everything else (such as what command to run for the test suite).
 
 Keep in mind:
+
 1. There are some mandatory variables for the `.tf` file (see one of the [examples](examples/)
 2. You can add extra variables to your `.tf` file, so you can use it when creating the environment. Those variables will need to be exported before running `terracumber-cli` as `TF_VAR_`, as explained at the [terraform doc](https://learn.hashicorp.com/terraform/getting-started/variables.html#from-environment-variables). Our example adds SCC credentials to pass them to Uyuni/SUSE Manager, and GitHub credentials to use them to clone the GitHub cucumber repository **[1]**
 
@@ -75,11 +74,11 @@ The email templates are plain text files with some variables to be replaced by `
 * `$skipped` - Number of tests skipped by cucumber
 * `$failures_log` - A list of failed tests, the number of failures is determined by `terracumber-cli` `--nlines` parameter
 
-# Bonus: clean old results
+## Bonus: clean old results
 
 The script `clean-old-results` can be used to get rid of undesired old results (use `-h` to get help)
 
-# How to contribute
+## How to contribute
 
 It is easy: just create a Pull Request with your contribution, and make sure that the unit tests are passing.
 

@@ -1,11 +1,17 @@
-# Use terraform variable files
+# Advanced usage
 
-To avoid using multiple main.tf having the same deployment and just some variables differences, use the tfvars files with a main template to deploy environment.
-For this example, we will have four type of files : 
- - main.tf template, deployment description using variables for environment specific parameters
+## Use terraform variable files
+
+To avoid using multiple `main.tf` files having the same deployment and just some variables differences, use the `tfvars` files with a main template to deploy environment.
+For this example, we will have four types of files:
+
+### main.tf
+
+Deployment description using variables for environment specific parameters
 
 __Example :__
-```terraform
+
+```hcl
     server = {
       provider_settings = {
         mac = var.ENVIRONMENT_CONFIGURATION[var.ENVIRONMENT].mac["server"]
@@ -20,9 +26,13 @@ __Example :__
       server_mounted_mirror = var.MIRROR
     }
 ```
- - variable.tf file, remove all the variables from the main.tf and move it to a specific file
+
+### variable.tf
+
+Remove all the variables from the `main.tf` file and move it to a specific one.
    __Example :__
-```terraform
+
+```hcl
 variable "BRIDGE" {
   type = string
 }
@@ -38,14 +48,17 @@ variable "ENVIRONMENT_CONFIGURATION" {
 
 variable "DOWNLOAD_ENDPOINT" {
   type = string
-  description = "Download enpoint to get build images and set custom_download_endpoint. This value is equal to platform mirror"
+  description = "Download endpoint to get build images and set custom_download_endpoint. This value is equal to platform mirror"
 }
 ```
 
- - XXXX.tfvars, you can have as many as you want. Specify the variables depending on the environment. For example mac addresses depending on NUE or PRV environment
+### Custom terraform variable files (XXX.tfvars)
 
-__Example :__ 
-```terraform
+You can have as many as you want. Specify the variables depending on the environment. For example mac addresses depending on NUE or PRV environment
+
+__Example :__
+
+```'hcl'
 ############ Nuremberg unique variables ###########
 
 DOMAIN            = "mgr.suse.de"
@@ -72,15 +85,13 @@ ENVIRONMENT_CONFIGURATION = {
     additional_network = "192.168.111.0/24"
   }
 }
-
 ```
 
-# Deploying environment depending on the product version, environment 
+## Deploying environment depending on the product version, environment 
 
 ```bash
-                        sh "rm -f ${env.resultdir}/sumaform/terraform.tfvars"
-                        sh "cat ${tfvars_manager43} ${tfvars_nuremberg} >> ${env.resultdir}/sumaform/terraform.tfvars"
-                        sh "echo 'ENVIRONMENT = \'${env_number}\'' >> ${env.resultdir}/sumaform/terraform.tfvars"
-                        sh "cp ${tf_local_variables} ${env.resultdir}/sumaform/"
-
+sh "rm -f ${env.resultdir}/sumaform/terraform.tfvars"
+sh "cat ${tfvars_manager43} ${tfvars_nuremberg} >> ${env.resultdir}/sumaform/terraform.tfvars"
+sh "echo 'ENVIRONMENT = \'${env_number}\'' >> ${env.resultdir}/sumaform/terraform.tfvars"
+sh "cp ${tf_local_variables} ${env.resultdir}/sumaform/"
 ```
