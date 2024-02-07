@@ -1,5 +1,7 @@
 from terracumber import junit
+from math import isclose
 import unittest
+
 
 
 class TestJunit(unittest.TestCase):
@@ -20,8 +22,13 @@ class TestJunit(unittest.TestCase):
         self.assertListEqual(self.junit.sort_test_files_by_mtime(), file_list)
 
     def test_get_totals(self):
-        totals = {'failures': 3, 'errors': 0, 'skipped': 0, 'passed': 63, 'tests': 66, 'time': 1334.586592}
-        self.assertDictEqual(self.junit.get_totals(), totals)
+        expected_totals = {'failures': 3, 'errors': 0, 'skipped': 0, 'passed': 63, 'tests': 66, 'time': 1334.586592}
+        computed_totals = self.junit.get_totals()
+        # avoid testing floats for equality
+        self.assertTrue(isclose(expected_totals['time'], computed_totals['time']))
+        del expected_totals['time']
+        del computed_totals['time']
+        self.assertDictEqual(computed_totals, expected_totals)
 
     def test_get_failures(self):
         failure_messages = [
