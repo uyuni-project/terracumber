@@ -80,7 +80,8 @@ The script `clean-old-results` can be used to get rid of undesired old results (
 
 ## How to contribute
 
-It is easy: 
+It is easy:
+
 - Make sure you have Git commit signing enabled. If you are not doing it already, check out the [GitHub documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification).
 - Make sure unit tests are passing.
 
