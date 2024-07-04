@@ -91,5 +91,3 @@ It is easy:
   ```
   For now the unit tests only cover the module.
 - Then, just open a Pull Request with your contribution.
-
-
