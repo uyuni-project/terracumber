@@ -80,12 +80,14 @@ The script `clean-old-results` can be used to get rid of undesired old results (
 
 ## How to contribute
 
-It is easy: just create a Pull Request with your contribution, and make sure that the unit tests are passing.
+It is easy: 
+- Make sure you have Git commit signing enabled. If you are not doing it already, check out the [GitHub documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification).
+- Make sure unit tests are passing
+  To run them:
+  ```bash
+  python3 -m unittest
+  ```
+  For now the unit tests only cover the module.
+- Then just Pull Request with your contribution.
 
-To run them:
 
-```bash
-python3 -m unittest
-```
-
-For now the unit tests only cover the module.
