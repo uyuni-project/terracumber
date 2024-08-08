@@ -102,7 +102,7 @@ class Terraformer:
         minion_list - List of minions to keep. If None, no minions are removed.
         """
         if use_minion_cleaner:
-            remove_unused_minion(f"{self.terraform_path}main.tf", minion_list)
+            remove_unused_minion(f"{self.terraform_path}/main.tf", minion_list)
 
         command_arguments = [self.terraform_bin, "apply", "-auto-approve", f"-parallelism={parallelism}"]
         for file in self.tfvars_files:
