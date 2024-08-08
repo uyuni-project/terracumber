@@ -15,7 +15,6 @@ import terracumber.junit
 import terracumber.mailer
 import terracumber.utils
 
-
 def parse_args():
     """Parse arguments"""
     parser = argparse.ArgumentParser(description='Run terrafrom and cucumber')
@@ -95,6 +94,10 @@ def parse_args():
     parser.add_argument('--bastion_ssh_key', help="""Bastion key to be use""", dest='bastion_ssh_key', default=None)
     parser.add_argument('--bastion_user', help="""Bastion user to be use""", dest='bastion_user', default='ec2-user')
     parser.add_argument('--bastion_hostname', help="""Bastion hostname to use""", dest='bastion_hostname', default=None)
+    parser.add_argument('--use-minion-cleaner', help='Activate or deactivate the minion cleaner',
+                        action='store_true', default=False)
+    parser.add_argument('--minion-list', help='Space-separated list of minions',
+                            default='', type=str)
 
     args = parser.parse_args()
     if args.runstep:
@@ -112,6 +115,7 @@ def parse_args():
     else:
         print("Either --runall or --runstep must be used")
         return False
+    args.minion_list = args.minion_list.split() if args.minion_list else []
     return args
 
 
@@ -216,7 +220,7 @@ def run_terraform(args, tf_vars):
         terraform.taint(args.taint)
     if args.destroy:
         terraform.destroy()
-    result = terraform.apply(args.parallelism)
+    result = terraform.apply(args.parallelism, args.use_minion_cleaner, args.minion_list)
     if result == 0:
         return True
     return False

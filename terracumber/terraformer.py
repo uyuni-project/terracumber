@@ -5,6 +5,7 @@ from os import environ, path, symlink, unlink
 from re import match, subn
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
+from .minion_cleaner import remove_unused_minion
 
 # Fallback to allow running python3 -m unittest
 try:
@@ -94,14 +95,18 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self, parallelism=10):
-        """Run terraform apply
+    def apply(self, parallelism=10, use_minion_cleaner=False, minion_list=[]):
+        """Run terraform apply after removing unused minions from the main.tf.
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
+        minion_list - List of minions to keep. If None, no minions are removed.
         """
-        command_arguments = [self.terraform_bin, "apply", "-auto-approve", "-parallelism=%s" % parallelism]
+        if use_minion_cleaner:
+            remove_unused_minion(f"{self.terraform_path}main.tf", minion_list)
+
+        command_arguments = [self.terraform_bin, "apply", "-auto-approve", f"-parallelism={parallelism}"]
         for file in self.tfvars_files:
-            command_arguments.append("-var-file=%s" % file)
+            command_arguments.append(f"-var-file={file}")
         return self.__run_command(command_arguments)
 
     def destroy(self):
