@@ -70,6 +70,6 @@ def remove_unused_minion(maintf_file, minion_list):
             data = data.replace(module, filter_module_references(module, minion_list))
 
     cleaned_content = re.sub(r'\n{3,}', '\n\n', data)
-    with open(terraform_file, 'w') as file:
+    with open(maintf_file, 'w') as file:
         file.write(cleaned_content)
-        logger.info(f"Unused modules removed from {terraform_file}.")
+        logger.info(f"Unused modules removed from {maintf_file}.")
