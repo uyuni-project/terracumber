@@ -37,7 +37,7 @@ maintf_content - Content of the main.tf file
 minions_list - List of minions to keep
 """
 def filter_module_references(maintf_content, minions_list):
-    lines = terraform_content.split('\n')
+    lines = maintf_content.split('\n')
     filtered_lines = [
         line for line in lines
         if (
