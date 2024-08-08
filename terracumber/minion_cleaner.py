@@ -8,9 +8,10 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-"""Extract the default module that is not going to remove.
+"""
+Extracts the default modules that should not be removed.
 
-maintf_content - Main.tf content
+maintf_content - Content of the main.tf file
 """
 def get_default_modules(maintf_content):
     module_names = re.findall(r'module\s+"([^"]+)"', maintf_content)
@@ -18,22 +19,22 @@ def get_default_modules(maintf_content):
     logger.info(f"Default modules are {filtered_module_names}")
     return filtered_module_names
 
-"""Module use to remove the references in the controller module
-Verify in line if the minion declare is  a minion to keep
+"""
+Checks if a configuration line in the controller module references is a minion that should be kept.
 
-line - configuration line from controller
-minions_list - list of minion to keep
+line - A configuration line from the controller
+minions_list - List of minions to keep
 """
 def contains_minion(line, minions_list):
     return any(minion in line for minion in minions_list)
 
+"""
+Filters configuration lines in the controller module to retain only the configurations
+for the minions that should be kept. Also ensures that the output module is not deleted
+(identified by having 'configuration' in the title). Removes workaround lines for clarity.
 
-"""Filter configuration lines in controller to only keep the configuration for the minions we keep.
-Also make sure not to delete the output module ( having configuration as title ).
-Remove the workaround lines for more visibility.
-
-maintf_content - Main.tf content
-minions_list - list of minion to keep
+maintf_content - Content of the main.tf file
+minions_list - List of minions to keep
 """
 def filter_module_references(maintf_content, minions_list):
     lines = terraform_content.split('\n')
@@ -46,10 +47,11 @@ def filter_module_references(maintf_content, minions_list):
     ]
     return '\n'.join(filtered_lines)
 
-"""Remove minion module not in the minion list
+"""
+Removes minion modules that are not in the list of minions to keep.
 
-maintf_file - Main.tf file path
-minions_list - list of minion to keep
+maintf_file - Path to the main.tf file
+minions_list - List of minions to keep
 """
 def remove_unused_minion(maintf_file, minion_list):
     with open(maintf_file, 'r') as file:
@@ -62,7 +64,7 @@ def remove_unused_minion(maintf_file, minion_list):
     for module in modules[1:]:
         module_name = module.split('"')[1]
         if module_name not in minion_list and 'base' not in module_name:
-            logger.info(f"Remove minion {module_name} from main.tf")
+            logger.info(f"Removing minion {module_name} from main.tf")
             data = data.replace("module " + module, '')
         elif module_name == 'controller':
             data = data.replace(module, filter_module_references(module, minion_list))
