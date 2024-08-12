@@ -96,7 +96,7 @@ class Terraformer:
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
     def apply(self, parallelism=10, use_tf_resource_cleaner=False, tf_resources_to_keep=[], tf_resources_to_delete=[]):
-        """Run terraform apply after removing unused minions from the main.tf.
+        """Run terraform apply after removing unselected resources from the main.tf.
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
         use_tf_resource_cleaner - Option to enable or disable the resource cleaner mechanism

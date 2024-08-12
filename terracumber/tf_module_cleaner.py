@@ -43,11 +43,11 @@ def contains_resource_name(line, tf_resources_to_keep):
 
 """
 Filters configuration lines in the controller module to retain only the configurations
-for the minions that should be kept. Also ensures that the output module is not deleted
+for the resouces that should be kept. Also ensures that the output module is not deleted
 (identified by having 'configuration' in the title). Removes workaround lines for clarity.
 
 maintf_content - Content of the main.tf file
-tf_resources_to_keep - List of modules to keep
+tf_resources_to_keep - List of resources to keep
 """
 def filter_module_references(maintf_content, tf_resources_to_keep):
     lines = maintf_content.split('\n')
@@ -64,8 +64,8 @@ def filter_module_references(maintf_content, tf_resources_to_keep):
 Removes modules and controller references from resources not in the resources to keep list.
 
 maintf_file - Path to the main.tf file
-tf_resources_to_keep - List of modules to keep
-tf_resources_to_delete - List of modules to remove ( can only be proxy, monitoring-server and retail)
+tf_resources_to_keep - List of resources to keep
+tf_resources_to_delete - List of resources to remove ( can only be proxy, monitoring-server and retail)
 """
 def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resources_to_delete):
     with open(maintf_file, 'r') as file:

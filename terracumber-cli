@@ -116,7 +116,6 @@ def parse_args():
     else:
         print("Either --runall or --runstep must be used")
         return False
- #   args.tf_resources_to_keep = args.tf_resources_to_keep.split() if args.tf_resources_to_keep else []
     return args
 
 
