@@ -94,10 +94,11 @@ def parse_args():
     parser.add_argument('--bastion_ssh_key', help="""Bastion key to be use""", dest='bastion_ssh_key', default=None)
     parser.add_argument('--bastion_user', help="""Bastion user to be use""", dest='bastion_user', default='ec2-user')
     parser.add_argument('--bastion_hostname', help="""Bastion hostname to use""", dest='bastion_hostname', default=None)
-    parser.add_argument('--use-minion-cleaner', help='Activate or deactivate the minion cleaner',
+    parser.add_argument('--use-tf-resource-cleaner', help='Activate or deactivate the minion cleaner',
                         action='store_true', default=False)
-    parser.add_argument('--minion-list', help='Space-separated list of minions',
-                            default='', type=str)
+    parser.add_argument('--tf-resources-to-keep', type=str, nargs='*', default=[], help='Space-separated list of minions resources to keep')
+    parser.add_argument('--tf-resources-to-delete', type=str, nargs='*', choices=['proxy', 'monitoring-server', 'retail'], default=[],
+                         help='List of default modules to force deletion')
 
     args = parser.parse_args()
     if args.runstep:
@@ -115,7 +116,7 @@ def parse_args():
     else:
         print("Either --runall or --runstep must be used")
         return False
-    args.minion_list = args.minion_list.split() if args.minion_list else []
+ #   args.tf_resources_to_keep = args.tf_resources_to_keep.split() if args.tf_resources_to_keep else []
     return args
 
 
@@ -220,7 +221,7 @@ def run_terraform(args, tf_vars):
         terraform.taint(args.taint)
     if args.destroy:
         terraform.destroy()
-    result = terraform.apply(args.parallelism, args.use_minion_cleaner, args.minion_list)
+    result = terraform.apply(args.parallelism, args.use_tf_resource_cleaner, args.tf_resources_to_keep, args.tf_resources_to_delete)
     if result == 0:
         return True
     return False

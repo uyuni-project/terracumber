@@ -5,7 +5,7 @@ from os import environ, path, symlink, unlink
 from re import match, subn
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
-from .minion_cleaner import remove_unused_minion
+from .tf_module_cleaner import remove_unselected_tf_resources
 
 # Fallback to allow running python3 -m unittest
 try:
@@ -95,14 +95,16 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self, parallelism=10, use_minion_cleaner=False, minion_list=[]):
+    def apply(self, parallelism=10, use_tf_resource_cleaner=False, tf_resources_to_keep=[], tf_resources_to_delete=[]):
         """Run terraform apply after removing unused minions from the main.tf.
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
-        minion_list - List of minions to keep. If None, no minions are removed.
+        use_tf_resource_cleaner - Option to enable or disable the resource cleaner mechanism
+        tf_resources_to_keep - List of minions to keep. If not minions are declared, all minions are going to be removed.
+        tf_resources_to_delete - Active action to delete proxy, monitoring-server or retail ( build and terminal minions)
         """
-        if use_minion_cleaner:
-            remove_unused_minion(f"{self.terraform_path}/main.tf", minion_list)
+        if use_tf_resource_cleaner:
+            remove_unselected_tf_resources(f"{self.terraform_path}/main.tf", tf_resources_to_keep, tf_resources_to_delete)
 
         command_arguments = [self.terraform_bin, "apply", "-auto-approve", f"-parallelism={parallelism}"]
         for file in self.tfvars_files:
