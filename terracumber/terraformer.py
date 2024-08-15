@@ -66,12 +66,12 @@ class Terraformer:
                     node_mu_repos = repos.get(node, None)
                     replacement_list = ["additional_repos = {"]
                     for name, url in node_mu_repos.items():
-                        replacement_list.append(f'\n{" " * 4}{name} = "{url}"')
-                    replacement_list.append("\n  }")
+                        replacement_list.append(f'\n    "{name}" = "{url}"')
+                    replacement_list.append("\n}")
                     replacement = ''.join(replacement_list)
-                    placeholder = '//' + node + '_additional_repos'
+                    placeholder = f'//{node}_additional_repos'
                     n_replaced = 0
-                    for line in fileinput.input("%s/main.tf" % self.terraform_path, inplace=True):
+                    for line in fileinput.input(f"{self.terraform_path}/main.tf", inplace=True):
                         (new_line, n) = subn(placeholder, replacement, line)
                         print(new_line, end='')
                         n_replaced += n
