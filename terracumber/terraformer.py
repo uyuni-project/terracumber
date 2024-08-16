@@ -125,7 +125,6 @@ class Terraformer:
 
     def destroy(self):
         """Run terraform destroy"""
-        self.prepare_environment()  # Ensure environment is prepared
         command_arguments = [self.terraform_bin, "destroy", "-auto-approve"]
         for file in self.tfvars_files:
             command_arguments.append("-var-file=%s" % file)
