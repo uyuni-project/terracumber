@@ -20,6 +20,7 @@ class TestTerraformer(unittest.TestCase):
         mock_path.exists.return_value = True
         mock_path.abspath.return_value = '/tmp'
         self.terraformer = terraformer.Terraformer(self.terraform_path, self.maintf, self.backend)
+        self.terraformer.prepare_environment()
         mock_unlink.assert_called_once_with('test/resources/modules/backend')
         mock_symlink.assert_called_once_with('/tmp/backend_modules/libvirt', 'test/resources/modules/backend')
 
