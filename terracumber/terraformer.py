@@ -30,24 +30,32 @@ class Terraformer:
     def __init__(self, terraform_path, maintf, backend, variables={}, output_file=False, terraform_bin='/usr/bin/terraform', variables_description_file="", tfvars_files=[]):
         self.terraform_path = terraform_path
         self.maintf = maintf
-        self.variables = variables
-        self.tfvars_files = []
-        if self.variables is None:
-            self.variables = {}
+        self.variables = variables or {}
         self.output_file = output_file
         self.terraform_bin = terraform_bin
-        copy(maintf, terraform_path + '/main.tf')
-        if path.isfile(variables_description_file):
-            copy(variables_description_file, terraform_path + '/variables.tf')
-        for tfvars_file in tfvars_files:
-            copy(tfvars_file, terraform_path)
-            self.tfvars_files.append(path.basename(tfvars_file))
-        # Only if we are using a folder with folder structure used by sumaform
-        if path.exists('%s/backend_modules/%s' % (path.abspath(terraform_path), backend)):
-            if path.islink('%s/modules/backend' % terraform_path):
-                unlink('%s/modules/backend' % terraform_path)
-            symlink('%s/backend_modules/%s' % (path.abspath(terraform_path), backend),
-                    '%s/modules/backend' % terraform_path)
+        self.variables_description_file = variables_description_file
+        self.tfvars_files = tfvars_files
+        self.backend = backend
+        self.is_prepared = False  # Flag to check if the environment is prepared
+
+    def prepare_environment(self):
+        """Prepare the terraform environment by copying files and setting up symlinks."""
+        if not self.is_prepared:
+            copy(self.maintf, self.terraform_path + '/main.tf')
+            if path.isfile(self.variables_description_file):
+                copy(self.variables_description_file, self.terraform_path + '/variables.tf')
+            for tfvars_file in self.tfvars_files:
+                copy(tfvars_file, self.terraform_path)
+                self.tfvars_files.append(path.basename(tfvars_file))
+
+            # Only if we are using a folder with folder structure used by sumaform
+            if path.exists('%s/backend_modules/%s' % (path.abspath(self.terraform_path), self.backend)):
+                if path.islink('%s/modules/backend' % self.terraform_path):
+                    unlink('%s/modules/backend' % self.terraform_path)
+                symlink('%s/backend_modules/%s' % (path.abspath(self.terraform_path), self.backend),
+                        '%s/modules/backend' % self.terraform_path)
+
+            self.is_prepared = True  # Mark as prepared
 
     def inject_repos(self, custom_repositories_json):
         """Set additional repositories into the main.tf, so they are injected by sumaform
@@ -56,7 +64,8 @@ class Terraformer:
             0 if no error
             1 if the json is not well-formed
             2 if the main.tf has an incorrect number of placeholders
-        """ 
+        """
+        self.prepare_environment()  # Ensure environment is prepared
         if custom_repositories_json:
             try:
                 repos = load(custom_repositories_json)
@@ -81,10 +90,12 @@ class Terraformer:
         return 0
 
     def init(self):
+        self.prepare_environment()  # Ensure environment is prepared
         """Run terraform init"""
         return self.__run_command([self.terraform_bin, "init"])
 
     def taint(self, what):
+        self.prepare_environment()  # Ensure environment is prepared
         """Taint resources according to a regex
 
         Keywords arguments:
@@ -103,6 +114,7 @@ class Terraformer:
         tf_resources_to_keep - List of minions to keep. If not minions are declared, all minions are going to be removed.
         tf_resources_to_delete - Active action to delete proxy, monitoring-server or retail ( build and terminal minions)
         """
+        self.prepare_environment()  # Ensure environment is prepared
         if use_tf_resource_cleaner:
             remove_unselected_tf_resources(f"{self.terraform_path}/main.tf", tf_resources_to_keep, tf_resources_to_delete)
 
