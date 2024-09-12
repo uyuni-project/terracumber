@@ -23,6 +23,8 @@ def parse_args():
                         'tfvars)', required=False, default=[])
     parser.add_argument('--tf_variables_description_file', help='Path to variables description file (variables.tf)',
                         required=False, default='')
+    parser.add_argument('--tf_variables_product_file', help='Path to variables product file (variables.tf)',
+                        required=False, default='')
     parser.add_argument('--gitrepo',
                         help='URL to the git repository containing terraform definitions',
                         default='https://github.com/uyuni-project/sumaform.git')
@@ -119,7 +121,7 @@ def parse_args():
     return args
 
 
-def read_config(tf_file, tf_variables_description_file):
+def read_config(tf_file, tf_variables_description_file, tf_variables_product_file):
     """Read and validate the config from a tf file"""
     if tf_variables_description_file != '':
         config = terracumber.config.read_config(tf_variables_description_file)
@@ -132,6 +134,15 @@ def read_config(tf_file, tf_variables_description_file):
             print("ERROR: variable %s does not exist at %s and is mandatory!" %
                   (required, tf_file))
             return False
+    if tf_variables_product_file != '':
+        with open(tf_variables_product_file, 'r') as f:
+            for line in f:
+                if line.startswith('#') or not line.strip():
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"')
+                config[key] = value
     return config
 
 
@@ -393,7 +404,7 @@ def main():
     if not os.path.isfile(args.tf):
         print("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
         sys.exit(1)
-    config = read_config(args.tf, args.tf_variables_description_file)
+    config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
     if not config:
         sys.exit(1)
     tf_vars = get_tf_vars()
