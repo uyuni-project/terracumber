@@ -71,7 +71,12 @@ tf_resources_to_delete - List of resources to remove ( can only be proxy, monito
 def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resources_to_delete):
     with open(maintf_file, 'r') as file:
         raw_data = file.read()
-    filtered_lines = [line for line in raw_data if not line.lstrip().startswith("//")]
+#     filtered_lines = [line for line in raw_data if not line.lstrip().startswith("//")]
+    for line in raw_data:
+        if not line.startswith("//"):
+            filtered_lines = line
+        else:
+            logger.info(f"Remove comment line : {line}")
     data = ''.join(filtered_lines)
     logger.info(f"Remove comments : {data}")
     modules = data.split("module ")
