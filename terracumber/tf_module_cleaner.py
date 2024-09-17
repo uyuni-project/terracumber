@@ -76,7 +76,7 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
     pattern = re.compile(r'^\s*//')
 
     # Filter out lines that match the pattern
-    filtered_lines = [line for line in lines if not pattern.match(raw_data)]
+    filtered_lines = [line for line in raw_data if not pattern.match(line)]
 #     for line in raw_data:
 #         if not line.startswith("//"):
 #             filtered_lines = line
