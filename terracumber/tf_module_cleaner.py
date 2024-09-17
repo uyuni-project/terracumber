@@ -72,11 +72,16 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
     with open(maintf_file, 'r') as file:
         raw_data = file.read()
 #     filtered_lines = [line for line in raw_data if not line.lstrip().startswith("//")]
-    for line in raw_data:
-        if not line.startswith("//"):
-            filtered_lines = line
-        else:
-            logger.info(f"Remove comment line : {line}")
+    # Regex to match lines that start with "//" followed by optional spaces
+    pattern = re.compile(r'^\s*//')
+
+    # Filter out lines that match the pattern
+    filtered_lines = [line for line in lines if not pattern.match(raw_data)]
+#     for line in raw_data:
+#         if not line.startswith("//"):
+#             filtered_lines = line
+#         else:
+#             logger.info(f"Remove comment line : {line}")
     data = ''.join(filtered_lines)
     logger.info(f"Remove comments : {data}")
     modules = data.split("module ")
