@@ -62,6 +62,7 @@ def filter_module_references(maintf_content, tf_resources_to_keep):
 
 """
 Removes modules and controller references from resources not in the resources to keep list.
+Removes comments outside modules from main.tf.
 
 maintf_file - Path to the main.tf file
 tf_resources_to_keep - List of resources to keep
@@ -69,10 +70,11 @@ tf_resources_to_delete - List of resources to remove ( can only be proxy, monito
 """
 def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resources_to_delete):
     with open(maintf_file, 'r') as file:
-        data = file.read()
+        raw_data = file.readlines()
 
+    filtered_lines = [line for line in raw_data if not line.lstrip().startswith("//")]
+    data = ''.join(filtered_lines)
     modules = data.split("module ")
-
     tf_resources_to_keep.extend(get_default_modules(data, tf_resources_to_delete))
     logger.info(f"Resources to keep {tf_resources_to_keep}.")
 
@@ -83,7 +85,6 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
             data = data.replace("module " + module, '')
         elif module_name == 'controller':
             data = data.replace(module, filter_module_references(module, tf_resources_to_keep))
-
     cleaned_content = re.sub(r'\n{3,}', '\n\n', data)
     with open(maintf_file, 'w') as file:
         file.write(cleaned_content)
