@@ -78,6 +78,7 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
 
     for module in modules[1:]:
         module_name = module.split('"')[1]
+        logger.info(f"Module data for {module_name} is {module}")
         if module_name not in tf_resources_to_keep :
             logger.info(f"Removing minion {module_name} from main.tf")
             data = data.replace("module " + module, '')
