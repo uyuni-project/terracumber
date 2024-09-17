@@ -84,7 +84,7 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
             data = data.replace("module " + module, '')
         elif module_name == 'controller':
             data = data.replace(module, filter_module_references(module, tf_resources_to_keep))
-
+    logger.info(f"Data is {data}")
     cleaned_content = re.sub(r'\n{3,}', '\n\n', data)
     with open(maintf_file, 'w') as file:
         file.write(cleaned_content)
