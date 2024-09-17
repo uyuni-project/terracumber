@@ -70,7 +70,8 @@ tf_resources_to_delete - List of resources to remove ( can only be proxy, monito
 def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resources_to_delete):
     with open(maintf_file, 'r') as file:
         data = file.read()
-    data = [line for line in data if not line.strip().startswith("//")]
+    filter_lines = [line for line in data if not line.strip().startswith("//")]
+    data = ''.join(filtered_lines)
     modules = data.split("module ")
 
     tf_resources_to_keep.extend(get_default_modules(data, tf_resources_to_delete))
@@ -78,13 +79,11 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resourc
 
     for module in modules[1:]:
         module_name = module.split('"')[1]
-        logger.info(f"Module data for {module_name} is {module}")
         if module_name not in tf_resources_to_keep :
             logger.info(f"Removing minion {module_name} from main.tf")
             data = data.replace("module " + module, '')
         elif module_name == 'controller':
             data = data.replace(module, filter_module_references(module, tf_resources_to_keep))
-    logger.info(f"Data is {data}")
     cleaned_content = re.sub(r'\n{3,}', '\n\n', data)
     with open(maintf_file, 'w') as file:
         file.write(cleaned_content)
