@@ -62,7 +62,7 @@ def filter_module_references(maintf_content, tf_resources_to_keep):
 
 """
 Removes modules and controller references from resources not in the resources to keep list.
-Removes comments upside modules from main.tf.
+Removes comments outside modules from main.tf.
 
 maintf_file - Path to the main.tf file
 tf_resources_to_keep - List of resources to keep
