@@ -1,3 +1,4 @@
+"""Manage HCL files as configuration files"""
 import hcl2
 
 def flatten(value):
