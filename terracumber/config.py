@@ -1,5 +1,12 @@
-"""Manage HCL files as configuration files"""
 import hcl2
+
+def flatten(value):
+    """Flatten complex structures into a dictionary or list."""
+    if isinstance(value, dict):
+        return {k: flatten(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [flatten(v) for v in value]
+    return value
 
 def read_config(path):
     """Return a dictionary with all the variables from a HCL file"""
@@ -7,21 +14,25 @@ def read_config(path):
     with open(path, 'r') as cfg:
         hcl_file = hcl2.load(cfg)
 
-        # Debugging the structure of hcl_file
-        print(hcl_file)  # Print to check the structure
+        # Debugging: Print to check the structure
+        print(hcl_file)
 
-        if 'variable' not in hcl_file:
-            return config
+        if 'variable' in hcl_file:
+            variables = hcl_file['variable']
 
-        # Ensure 'variable' is a dictionary before accessing its items
-        if isinstance(hcl_file['variable'], dict):
-            for key, value in hcl_file['variable'].items():
-                try:
-                    config[key] = value['default']
-                except KeyError:
-                    pass
-        else:
-            print("Unexpected format for 'variable':", type(hcl_file['variable']))
+            # Handle list or dict for variables
+            if isinstance(variables, dict):
+                for key, value in variables.items():
+                    try:
+                        config[key] = flatten(value['default'])
+                    except KeyError:
+                        pass
+            elif isinstance(variables, list):
+                for variable in variables:
+                    for key, value in variable.items():
+                        try:
+                            config[key] = flatten(value['default'])
+                        except KeyError:
+                            pass
 
     return config
-
