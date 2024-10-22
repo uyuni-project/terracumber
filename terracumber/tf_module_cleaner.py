@@ -24,6 +24,8 @@ def get_default_modules(maintf_content, tf_resources_to_delete):
             exclusions.extend(['terminal', 'buildhost'])
         if 'proxy' in tf_resources_to_delete:
             exclusions.append('proxy')
+        if 'proxy_containerized' in tf_resources_to_delete:
+            exclusions.append('proxy_containerized')
         if 'monitoring-server' in tf_resources_to_delete:
             exclusions.append('monitoring-server')
 
