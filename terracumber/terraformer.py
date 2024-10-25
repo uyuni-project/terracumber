@@ -72,7 +72,7 @@ class Terraformer:
             except JSONDecodeError:
                 return 1
             for node in repos.keys():
-                if node == 'server':
+                if node == 'server' or node == 'proxy':
                     node_mu_repos = repos.get(node, None)
                     replacement_list = ["additional_repos = {"]
                     for name, url in node_mu_repos.items():
