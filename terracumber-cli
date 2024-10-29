@@ -14,6 +14,14 @@ import terracumber.cucumber
 import terracumber.junit
 import terracumber.mailer
 import terracumber.utils
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
 
 def parse_args():
     """Parse arguments"""
@@ -105,18 +113,18 @@ def parse_args():
     args = parser.parse_args()
     if args.runstep:
         if args.runstep == 'cucumber' and not args.cucumber_cmd:
-            print("--runstep cucumber requires --cucumber-cmd")
+            logger.error("--runstep cucumber requires --cucumber-cmd")
             return False
         if args.runstep == 'saltshaker' and not args.saltshaker_cmd:
-            print("--runstep saltshaker requires --saltshaker-cmd")
+            logger.error("--runstep saltshaker requires --saltshaker-cmd")
             return False
-        if not 'BUILD_TIMESTAMP' in os.environ and not 'BUILD_NUMBER' in os.environ:
-            print("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
+        if 'BUILD_TIMESTAMP' not in os.environ and 'BUILD_NUMBER' not in os.environ:
+            logger.error("--runstep requires BUILD_TIMESTAMP or BUILD_NUMBER variables exported")
             return False
     elif args.runall:
         pass
     else:
-        print("Either --runall or --runstep must be used")
+        logger.error("Either --runall or --runstep must be used")
         return False
     return args
 
@@ -131,8 +139,7 @@ def read_config(tf_file, tf_variables_description_file, tf_variables_product_fil
                      'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
                      'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
         if required not in config:
-            print("ERROR: variable %s does not exist at %s and is mandatory!" %
-                  (required, tf_file))
+            logger.error("Variable %s does not exist in %s and is mandatory!", required, tf_file)
             return False
     if tf_variables_product_file != '':
         with open(tf_variables_product_file, 'r') as f:
@@ -190,7 +197,7 @@ def get_timestamp(args):
 def create_outputdir(outputdir, timestamp):
     """Create an outputdir with a timestamp"""
     if not os.path.isdir(outputdir):
-        print("ERROR: %s folder does not exist" % outputdir)
+        logger.error("ERROR: %s folder does not exist", outputdir)
         return False
     outputdir = '%s/%s/' % (outputdir.rstrip('/'), timestamp)
     existed = True
@@ -220,11 +227,13 @@ def run_terraform(args, tf_vars):
         with open(args.custom_repositories, 'r') as repos_file:
             error = terraform.inject_repos(repos_file)
             if error == 1:
-                print("ERROR: %s is not a well-formed JSON file" % args.custom_repositories)
+                logger.error("ERROR: %s is not a well-formed JSON file", args.custom_repositories)
                 return False
             elif error == 2:
-                print("ERROR: make sure to have exactly 1 placeholder for additional repositories in %s" % args.tf)
+                logger.error("ERROR: Make sure to have exactly 1 placeholder for additional repositories in %s", args.tf)
                 return False
+            elif error == 3:
+                logger.warning("WARNING: Proxy or server is missing the placeholder for additional repositories in %s", args.tf)
     if args.init:
         terraform.init()
     if args.taint:
@@ -254,13 +263,13 @@ def get_controller_hostname(args, tf_vars):
 def get_bastion_hostname(args, tf_vars):
     """ Get bastion hostname """
     if args.bastion_hostname:
-      return args.bastion_hostname
+        return args.bastion_hostname
     try:
         terraform = terracumber.terraformer.Terraformer(
             args.gitfolder, args.tf, args.sumaform_backend, tf_vars, args.logfile)
         return terraform.get_hostname('bastion')
     except (KeyError, FileNotFoundError) as error:
-        print(error)
+        logger.error("Error occurred while getting bastion hostname: %s", error)
         return None
 
 
@@ -277,15 +286,15 @@ def get_results(args, tf_vars, config, ctl_creds):
             cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], copyfile),
                          '%s' % args.outputdir)
         except FileNotFoundError:
-            print("Nothing matched %s/%s at %s!" % (config['CUCUMBER_RESULTS'],
-                                                    copyfile, ctl_creds['hostname']))
+            logger.warning("Nothing matched %s/%s at %s!", config['CUCUMBER_RESULTS'],
+                           copyfile, ctl_creds['hostname'])
     for copydir in directories:
         try:
             cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
                                    '%s/%s' % (args.outputdir, copydir))
         except FileNotFoundError:
-            print("Remote directory %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
-                                                             copydir))
+            logger.warning("Remote directory %s/%s did not exist!", config['CUCUMBER_RESULTS'],
+                           copydir)
     return True
 
 
@@ -300,7 +309,7 @@ def get_results_saltshaker(args, tf_vars, config, ctl_creds):
             cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
                                    '%s/%s' % (args.outputdir, copydir))
         except FileNotFoundError:
-            print("Remote directory %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
+            logger.error("Remote directory %s/%s did not exist!" % (config['CUCUMBER_RESULTS'],
                                                              copydir))
     return True
 
@@ -370,7 +379,7 @@ def cucumber_put(args, tf_vars, ctl_creds, src, dest):
     """ Copy a file on the controller """
     ctl = get_controller_hostname(args, tf_vars)
     if ctl is None:
-        print("WARNING: not injecting custom repositories to the controller, as it does not exist")
+        logger.warning("WARNING: not injecting custom repositories to the controller, as it does not exist")
     else:
         ctl_creds['hostname'] = ctl
         ctl_creds['timeout'] = 300
@@ -400,9 +409,9 @@ def main():
     (args.outputdir, dir_existed) = create_outputdir(
         args.outputdir, template_data['timestamp'])
     if args.runall and dir_existed:
-        print("WARNING: %s directory already exists!" % args.outputdir)
+        logger.warning("WARNING: %s directory already exists!" % args.outputdir)
     if not os.path.isfile(args.tf):
-        print("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
+        logger.error("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
         sys.exit(1)
     config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
     if not config:
@@ -420,21 +429,21 @@ def main():
     bastion_creds = {'hostname': None, 'username': args.bastion_user,
                      'port': 22, 'key_filename': args.bastion_ssh_key}
     if args.runall or args.runstep == 'gitsync':
-        print("Cloning/Updating repository to/at %s..." % args.gitfolder)
+        logger.info("Cloning/Updating repository to/at %s...", args.gitfolder)
         try:
             terracumber.git.Git(args.gitrepo, args.gitref,
                                 args.gitfolder, auth=git_creds, auto=True)
             results['git'] = True
         except Exception as e:
-            print("ERROR: %s: %s" % (type(e).__name__, e))
+            logger.error("ERROR: %s: %s" % (type(e).__name__, e))
             results['git'] = False
 
     if args.runall or args.runstep == 'provision':
-        print("Running terraform...")
+        logger.info("Running terraform...")
         results['terraform'] = run_terraform(args, tf_vars)
 
     if args.runstep == 'saltshaker':
-        print("Running Salt Shaker tests...")
+        logger.info("Running Salt Shaker tests...")
         if args.saltshaker_cmd:
             cmd = args.saltshaker_cmd
         else:
@@ -454,7 +463,7 @@ def main():
 
     # Only if terraform was successful or step cucumber is called
     if (args.runall and results['terraform']) or args.runstep == 'cucumber':
-        print("Running command...")
+        logger.info("Running command...")
         if args.cucumber_cmd:
             cmd = args.cucumber_cmd
         else:
@@ -462,20 +471,20 @@ def main():
         results['output-tests'] = cucumber_run(args, tf_vars, ctl_creds, cmd)
 
     if (args.runall and results['output-tests']) or args.runstep == 'getresults':
-        print("Fetching files from controller to %s..." % args.outputdir)
+        logger.info("Fetching files from controller to %s...", args.outputdir)
         results['results'] = get_results(args, tf_vars, config, ctl_creds)
 
     if args.runstep == 'saltshaker_getresults':
-        print("Fetching files from Salt Shaker node to %s..." % args.outputdir)
+        logger.info("Fetching files from Salt Shaker node to %s...", args.outputdir)
         results['results'] = get_results_saltshaker(args, tf_vars, config, ctl_creds)
 
     if args.runall or args.runstep == 'mail':
-        print("Preparing and sending email")
+        logger.info("Preparing and sending email")
         results['mail'] = send_mail(
             args, config, template_data, results['output-tests'])
 
     if args.runstep == 'saltshaker_mail':
-        print("Preparing and sending email for Salt Shaker")
+        logger.info("Preparing and sending email for Salt Shaker")
         results['mail'] = send_mail(
             args, config, template_data, results['output-tests'], saltshaker=True)
 

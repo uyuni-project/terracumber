@@ -85,8 +85,10 @@ class Terraformer:
                         (new_line, n) = subn(placeholder, replacement, line)
                         print(new_line, end='')
                         n_replaced += n
-                    if n_replaced != 1:
+                    if n_replaced > 1:
                         return 2
+                    elif n_replaced == 0:
+                        return 3
         return 0
 
     def init(self):
