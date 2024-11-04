@@ -1,6 +1,6 @@
 """Run and manage terraform"""
 import fileinput
-from json import load, JSONDecodeError
+from json import load
 from os import environ, path, symlink, unlink
 from re import match, subn
 from shutil import copy
@@ -58,19 +58,10 @@ class Terraformer:
             self.is_prepared = True  # Mark as prepared
 
     def inject_repos(self, custom_repositories_json):
-        """Set additional repositories into the main.tf, so they are injected by sumaform
-
-        Returns:
-            0 if no error
-            1 if the json is not well-formed
-            2 if the main.tf has an incorrect number of placeholders
-        """
+        """Set additional repositories into the main.tf, so they are injected by sumaform"""
         self.prepare_environment()  # Ensure environment is prepared
         if custom_repositories_json:
-            try:
-                repos = load(custom_repositories_json)
-            except JSONDecodeError:
-                return 1
+            repos = load(custom_repositories_json)
             for node in repos.keys():
                 if node == 'server' or node == 'proxy':
                     node_mu_repos = repos.get(node, None)
@@ -80,16 +71,9 @@ class Terraformer:
                     replacement_list.append("\n}")
                     replacement = ''.join(replacement_list)
                     placeholder = f'//{node}_additional_repos'
-                    n_replaced = 0
                     for line in fileinput.input(f"{self.terraform_path}/main.tf", inplace=True):
                         (new_line, n) = subn(placeholder, replacement, line)
                         print(new_line, end='')
-                        n_replaced += n
-                    if n_replaced > 1:
-                        return 2
-                    elif n_replaced == 0:
-                        return 3
-        return 0
 
     def init(self):
         self.prepare_environment()  # Ensure environment is prepared
