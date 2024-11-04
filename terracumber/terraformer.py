@@ -71,6 +71,8 @@ class Terraformer:
                 repos = load(custom_repositories_json)
             except JSONDecodeError:
                 return 1
+            
+            return_code = 0
             for node in repos.keys():
                 if node == 'server' or node == 'proxy':
                     node_mu_repos = repos.get(node, None)
@@ -88,8 +90,10 @@ class Terraformer:
                     if n_replaced > 1:
                         return 2
                     elif n_replaced == 0:
-                        return 3
-        return 0
+                        # not a fatal error, just trigger a warning when the return is checked
+                        return_code = 3
+                        
+        return return_code
 
     def init(self):
         self.prepare_environment()  # Ensure environment is prepared
