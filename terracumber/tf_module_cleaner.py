@@ -25,7 +25,7 @@ def get_default_modules(maintf_content, tf_resources_to_delete):
         if 'proxy' in tf_resources_to_delete:
             exclusions.extend(['proxy','dhcp_dns'])
         if 'monitoring-server' in tf_resources_to_delete:
-            exclusions.append('monitoring-server')
+            exclusions.append('monitoring_server')
 
     filtered_module_names = [name for name in module_names if all(exclusion not in name for exclusion in exclusions)]
 
