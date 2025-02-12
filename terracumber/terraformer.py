@@ -112,7 +112,7 @@ class Terraformer:
             print(resource)
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
-    def apply(self, parallelism=10, use_tf_resource_cleaner=False, tf_resources_to_keep=[], tf_resources_to_delete=[]):
+    def apply(self, parallelism=10, use_tf_resource_cleaner=False, tf_resources_to_keep=[], delete_all=False):
         """Run terraform apply after removing unselected resources from the main.tf.
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
@@ -122,7 +122,7 @@ class Terraformer:
         """
         self.prepare_environment()  # Ensure environment is prepared
         if use_tf_resource_cleaner:
-            remove_unselected_tf_resources(f"{self.terraform_path}/main.tf", tf_resources_to_keep, tf_resources_to_delete)
+            remove_unselected_tf_resources(f"{self.terraform_path}/main.tf", tf_resources_to_keep, delete_all)
 
         command_arguments = [self.terraform_bin, "apply", "-auto-approve", f"-parallelism={parallelism}"]
         for file in self.tfvars_files:

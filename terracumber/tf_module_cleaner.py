@@ -9,45 +9,41 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 """
-Extracts the default modules that should not be removed.
+Extracts the default modules that should not be removed based on the `delete_all` flag.
 
 :param maintf_content: Content of the main.tf file.
-:param tf_resources_to_delete: List that can include 'proxy', 'monitoring', and 'retail' that will force to delete those modules.
-:return: List of default module names to keep.
+:param delete_all: Boolean indicating whether to delete all resources (True) or just clients (False).
+:return: List of module names to keep.
 """
-def get_default_modules(maintf_content, tf_resources_to_delete):
+def get_default_modules(maintf_content, delete_all):
     module_names = re.findall(r'module\s+"([^"]+)"', maintf_content)
     exclusions = ['minion', 'client']
 
-    if tf_resources_to_delete:
-        if 'retail' in tf_resources_to_delete:
-            exclusions.extend(['terminal', 'buildhost', 'proxy', 'dhcp_dns'])
-        if 'proxy' in tf_resources_to_delete:
-            exclusions.extend(['proxy', 'dhcp_dns'])
-        if 'monitoring-server' in tf_resources_to_delete:
-            exclusions.append('monitoring_server')
+    if delete_all:
+        exclusions.extend(['terminal', 'buildhost', 'proxy', 'dhcp_dns', 'monitoring_server'])
 
     filtered_module_names = [name for name in module_names if all(exclusion not in name for exclusion in exclusions)]
 
-    logger.info(f"Default modules are {filtered_module_names}")
+    logger.info(f"Default modules to keep: {filtered_module_names}")
     return filtered_module_names
 
 """
-Check for any resource in the line with exact match within '.'
+Check for any resource in the line with exact match within '.'.
 
-line - A configuration line from the controller
-tf_resources_to_keep - List of resources to keep
+:param line: A configuration line from the controller.
+:param tf_resources_to_keep: List of resources to keep.
+:return: Boolean indicating if the line contains a resource to keep.
 """
 def contains_resource_name(line, tf_resources_to_keep):
     return any(re.search(rf'\.{re.escape(resource)}\.', line) for resource in tf_resources_to_keep)
 
 """
 Filters configuration lines in the controller module to retain only the configurations
-for the resouces that should be kept. Also ensures that the output module is not deleted
-(identified by having 'configuration' in the title). Removes workaround lines for clarity.
+for the resources that should be kept. Also ensures that the output module is not deleted.
 
-maintf_content - Content of the main.tf file
-tf_resources_to_keep - List of resources to keep
+:param maintf_content: Content of the main.tf file.
+:param tf_resources_to_keep: List of resources to keep.
+:return: Filtered main.tf content.
 """
 def filter_module_references(maintf_content, tf_resources_to_keep):
     lines = maintf_content.split('\n')
@@ -61,27 +57,27 @@ def filter_module_references(maintf_content, tf_resources_to_keep):
     return '\n'.join(filtered_lines)
 
 """
-Removes modules and controller references from resources not in the resources to keep list.
+Removes modules and controller references for resources not in the resources to keep list.
 Removes comments outside modules from main.tf.
 
-maintf_file - Path to the main.tf file
-tf_resources_to_keep - List of resources to keep
-tf_resources_to_delete - List of resources to remove ( can only be proxy, monitoring-server and retail)
+:param maintf_file: Path to the main.tf file.
+:param tf_resources_to_keep - List of resources to keep
+:param delete_all: Boolean indicating whether to delete all resources (True) or just clients (False).
 """
-def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, tf_resources_to_delete):
+def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, delete_all):
     with open(maintf_file, 'r') as file:
         raw_data = file.readlines()
 
     filtered_lines = [line for line in raw_data if not line.lstrip().startswith("//")]
     data = ''.join(filtered_lines)
     modules = data.split("module ")
-    tf_resources_to_keep.extend(get_default_modules(data, tf_resources_to_delete))
+    tf_resources_to_keep.extend(get_default_modules(data, delete_all))
     logger.info(f"Resources to keep {tf_resources_to_keep}.")
 
     for module in modules[1:]:
         module_name = module.split('"')[1]
-        if module_name not in tf_resources_to_keep :
-            logger.info(f"Removing minion {module_name} from main.tf")
+        if module_name not in tf_resources_to_keep:
+            logger.info(f"Removing module {module_name} from main.tf")
             data = data.replace("module " + module, '')
         elif module_name == 'controller':
             data = data.replace(module, filter_module_references(module, tf_resources_to_keep))
