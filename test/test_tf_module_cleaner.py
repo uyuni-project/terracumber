@@ -10,11 +10,15 @@ class TestTerraformFunctions(unittest.TestCase):
     @patch('terracumber.tf_module_cleaner.logger.info')
     def test_get_default_modules(self, mock_logger, mock_findall):
         mock_findall.return_value = ['module.server', 'module.proxy', 'module.terminal']
-        tf_resources_to_delete = ['retail', 'proxy']
 
-        result = tf_module_cleaner.get_default_modules('content', tf_resources_to_delete)
+        # Test when delete_all=True (all resources except exclusions are kept)
+        result = tf_module_cleaner.get_default_modules('content', delete_all=True)
         expected = ['module.server']
+        self.assertEqual(result, expected)
 
+        # Test when delete_all=False (keeps only client-related resources)
+        result = tf_module_cleaner.get_default_modules('content', delete_all=False)
+        expected = ['module.server', 'module.proxy', 'module.terminal']
         self.assertEqual(result, expected)
 
     def test_contains_resource_name(self):
@@ -76,14 +80,20 @@ class TestTerraformFunctions(unittest.TestCase):
     def test_remove_unselected_tf_resources(self, mock_logger, mock_filter_module_references, mock_get_default_modules, mock_open):
         mock_get_default_modules.return_value = ['server']
         mock_filter_module_references.return_value = 'module "rocky8-minion" { }'
-
         tf_resources_to_keep = ['rocky8-minion']
-        tf_resources_to_delete = ['proxy']
 
-        tf_module_cleaner.remove_unselected_tf_resources('mockfile', tf_resources_to_keep, tf_resources_to_delete)
+        # Test when delete_all=True
+        tf_module_cleaner.remove_unselected_tf_resources('mockfile', tf_resources_to_keep, delete_all=False)
 
         handle = mock_open()
         handle.write.assert_called_once_with('module "server" { } ')
+
+        # Test when delete_all=False
+        mock_get_default_modules.return_value = ['server', 'proxy']
+        tf_module_cleaner.remove_unselected_tf_resources('mockfile', tf_resources_to_keep, delete_all=False)
+
+        handle = mock_open()
+        handle.write.assert_called_with('module "server" { } module "proxy" { } ')
 
 if __name__ == '__main__':
     unittest.main()
