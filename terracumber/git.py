@@ -21,7 +21,7 @@ class Git:
     a SSH agent
     """
 
-    def __init__(self, url, ref, folder, auth=None, auto=False):
+    def __init__(self, url, ref, folder, auth=None, auto=False, logger=None):
         self.url = url
         self.ref = ref
         self.folder = folder
@@ -29,6 +29,7 @@ class Git:
         self.tag = False
         self.reset_hard = False
         self.repo = None
+        self.logger = logger
         if 'user' in auth:
             self.credentials = pygit2.credentials.UserPass(auth['user'],
                                                            auth['password'])
@@ -61,6 +62,39 @@ class Git:
         except KeyError:
             # Maybe this is a tag
             self.repo.checkout('refs/tags/' + self.ref)
+
+    def get_last_commit(self):
+        """ Get last commit of the current branch """
+        try:
+            remote_branch = self.repo.lookup_branch("origin/" + self.ref, pygit2.GIT_BRANCH_REMOTE)
+            if not isinstance(remote_branch, pygit2.Branch):
+                return None
+            branch_ref = self.repo.lookup_reference(remote_branch.name)
+            oid_commit = branch_ref.target
+            commit = self.repo[oid_commit]
+            return commit
+        except (KeyError, pygit2.GitError) as e:
+            if self.logger is not None:
+                self.logger.error(f"Error retrieving last commit: {e}")
+            return None
+
+    def get_a_given_number_of_commits(self, commits_to_get):
+        """ Get a specified number of commits """
+        try:
+            commits = []
+            elements = self.repo.walk(self.repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+            count = 0
+            for commit in elements:
+                if count < commits_to_get:
+                    commits.append(commit)
+                    count +=1
+                else:
+                    break
+            return commits
+        except (KeyError, pygit2.GitError) as e:
+            if self.logger is not None:
+                self.logger.error(f"Error retrieving commits: {e}")
+            return None
 
     def ref_is_tag(self):
         """ Check if the reference on the object is a tag

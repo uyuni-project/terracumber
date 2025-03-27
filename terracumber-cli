@@ -446,9 +446,16 @@ def main():
     if args.runall or args.runstep == 'gitsync':
         logger.info("Cloning/Updating repository to/at %s...", args.gitfolder)
         try:
-            terracumber.git.Git(args.gitrepo, args.gitref,
-                                args.gitfolder, auth=git_creds, auto=True)
+            git_repo = terracumber.git.Git(args.gitrepo, args.gitref,
+                                args.gitfolder, auth=git_creds, auto=True,logger=logger)
             results['git'] = True
+            logger.info("Repository was succesfully cloned")
+            number_of_commits_to_be_retrieved = 10
+            commits = git_repo.get_a_given_number_of_commits(number_of_commits_to_be_retrieved)
+            if commits is not None:
+                logger.info("")
+                for commit in commits[::-1]:
+                    logger.info(f"{commit.short_id} {commit.author.name} {commit.message} ")
         except Exception as e:
             logger.error("ERROR: %s: %s" % (type(e).__name__, e))
             results['git'] = False
