@@ -35,7 +35,17 @@ Check for any resource in the line with exact match within '.'.
 :return: Boolean indicating if the line contains a resource to keep.
 """
 def contains_resource_name(line, tf_resources_to_keep):
-    return any(re.search(rf'\.{re.escape(resource)}\.', line) for resource in tf_resources_to_keep)
+    stripped_line = line.strip()
+    # Regex pattern breakdown:
+    # r'\.{re.escape(resource)}\.': Matches resource name surrounded by dots (e.g., .server.)
+    # r'^{re.escape(resource)}\s*=': Matches resource name at the START of the line, followed by optional spaces and '=' (e.g., server_configuration = ...)
+    # r'^{re.escape(resource)}\s': Matches resource name at the START of the line, followed by a space (in case it's a Terraform block declaration)
+    return any(
+        re.search(rf'\.{re.escape(resource)}\.', stripped_line) or # Matches module attributes (e.g. .server.)
+        re.search(rf'^{re.escape(resource)}\s*=', stripped_line) or # Matches assignment at line start (e.g. server_configuration = ...)
+        re.search(rf'^{re.escape(resource)}\s', stripped_line)      # Matches resource/variable declaration at line start
+        for resource in tf_resources_to_keep
+    )
 
 """
 Filters configuration lines in the controller module to retain only the configurations
@@ -46,14 +56,38 @@ for the resources that should be kept. Also ensures that the output module is no
 :return: Filtered main.tf content.
 """
 def filter_module_references(maintf_content, tf_resources_to_keep):
+    """
+    Filters configuration lines in the controller module to retain only the configurations
+    for the resources that should be kept. Also ensures that the output module is not deleted.
+
+    :param maintf_content: Content of the main.tf file.
+    :param tf_resources_to_keep: List of resources to keep.
+    :return: Filtered main.tf content.
+    """
+    resources_set = set(tf_resources_to_keep)
+    if 'server' in resources_set or 'server_containerized' in resources_set:
+        resources_set.add('server_configuration')
+    if 'proxy' in resources_set or 'proxy_containerized' in resources_set:
+        resources_set.add('proxy_configuration')
+    tf_resources_to_keep = list(resources_set)
+    logger.debug(f"Declaration to keep in controller module: {tf_resources_to_keep}")
     lines = maintf_content.split('\n')
-    filtered_lines = [
-        line for line in lines
-        if (
-            ('configuration' not in line or contains_resource_name(line, tf_resources_to_keep)) and
-            'WORKAROUND' not in line
+    filtered_lines = []
+
+    # Rewriting list comprehension into a for loop to add logging
+    for line in lines:
+        # Define the exact condition for KEEPING the line
+        should_keep = (
+              ('configuration' not in line or contains_resource_name(line, tf_resources_to_keep)) and
+              'WORKAROUND' not in line
         ) or 'output' in line
-    ]
+
+        if should_keep:
+            filtered_lines.append(line)
+        else:
+            # 💡 Log the line that is being filtered out (removed)
+            logger.debug(f"FILTERED_OUT: '{line.strip()}'")
+
     return '\n'.join(filtered_lines)
 
 """
@@ -73,6 +107,12 @@ def remove_unselected_tf_resources(maintf_file, tf_resources_to_keep, delete_all
     modules = data.split("module ")
     tf_resources_to_keep.extend(get_default_modules(data, delete_all))
     logger.info(f"Resources to keep {tf_resources_to_keep}.")
+
+    ## Filter out proxy configuration in locals balise
+    if delete_all:
+        logger.info("Delete all is True. Removing proxy_configuration from locals block.")
+        proxy_config_line = r'\s*proxy_configuration\s*=\s*strcontains\(var\.PRODUCT_VERSION,\s*"4\.3"\)\s*\?\s*module\.(proxy|proxy_containerized)\[0]\.configuration\s*:\s*module\.(proxy|proxy_containerized)\[0]\.configuration'
+        data = re.sub(proxy_config_line, '', data)
 
     for module in modules[1:]:
         module_name = module.split('"')[1]
