@@ -5,7 +5,7 @@ from os import environ, path, symlink, unlink
 from re import match, subn
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
-from .tf_module_cleaner import remove_unselected_tf_resources
+from .tfvars_cleaner import remove_unselected_tfvars_resources
 
 # Fallback to allow running python3 -m unittest
 try:
@@ -71,7 +71,7 @@ class Terraformer:
                 repos = load(custom_repositories_json)
             except JSONDecodeError:
                 return 1
-            
+
             return_code = 0
             for node in repos.keys():
                 if node == 'server' or node == 'proxy':
@@ -92,7 +92,7 @@ class Terraformer:
                     elif n_replaced == 0:
                         # not a fatal error, just trigger a warning when the return is checked
                         return_code = 3
-                        
+
         return return_code
 
     def init(self):
@@ -113,16 +113,24 @@ class Terraformer:
             self.__run_command([self.terraform_bin, "taint", "%s" % resource])
 
     def apply(self, parallelism=10, use_tf_resource_cleaner=False, tf_resources_to_keep=[], delete_all=False):
-        """Run terraform apply after removing unselected resources from the main.tf.
+        """Run terraform apply after removing unselected resources from the tfvars.
 
         parallelism - Define the number of parallel resource operations. Defaults to 10 as specified by terraform.
         use_tf_resource_cleaner - Option to enable or disable the resource cleaner mechanism
         tf_resources_to_keep - List of minions to keep. If not minions are declared, all minions are going to be removed.
-        tf_resources_to_delete - Active action to delete proxy, monitoring-server or retail ( build and terminal minions)
+        delete_all - Active action to delete proxy, monitoring-server or retail ( build and terminal minions)
         """
         self.prepare_environment()  # Ensure environment is prepared
+
         if use_tf_resource_cleaner:
-            remove_unselected_tf_resources(f"{self.terraform_path}/main.tf", tf_resources_to_keep, delete_all)
+            processed_files = set()
+            for tfvars_file in self.tfvars_files:
+                basename = path.basename(tfvars_file)
+                if basename not in processed_files:
+                    target_file = path.join(self.terraform_path, basename)
+                    if path.isfile(target_file):
+                        remove_unselected_tfvars_resources(target_file, tf_resources_to_keep, delete_all)
+                    processed_files.add(basename)
 
         command_arguments = [self.terraform_bin, "apply", "-auto-approve", f"-parallelism={parallelism}"]
         for file in self.tfvars_files:
