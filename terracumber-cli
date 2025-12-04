@@ -123,6 +123,12 @@ def parse_args():
         action='store_true',
         default=False
     )
+    parser.add_argument(
+        '--skip-variables-check',
+        help='Skip validation of mandatory configuration variables (URL_PREFIX, MAIL_*, etc.)',
+        action='store_true',
+        default=False
+    )
 
 
     args = parser.parse_args()
@@ -144,18 +150,19 @@ def parse_args():
     return args
 
 
-def read_config(tf_file, tf_variables_description_file, tf_variables_product_file):
+def read_config(tf_file, tf_variables_description_file, tf_variables_product_file, skip_variables_check):
     """Read and validate the config from a tf file"""
     if tf_variables_description_file != '':
         config = terracumber.config.read_config(tf_variables_description_file)
     else:
         config = terracumber.config.read_config(tf_file)
-    for required in ['URL_PREFIX', 'CUCUMBER_COMMAND', 'CUCUMBER_BRANCH', 'CUCUMBER_RESULTS',
-                     'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
-                     'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
-        if required not in config:
-            logger.error("Variable %s does not exist in %s and is mandatory!", required, tf_file)
-            return False
+    if not skip_variables_check:
+        for required in ['URL_PREFIX', 'CUCUMBER_COMMAND', 'CUCUMBER_BRANCH', 'CUCUMBER_RESULTS',
+                         'MAIL_SUBJECT', 'MAIL_TEMPLATE', 'MAIL_SUBJECT_ENV_FAIL',
+                         'MAIL_TEMPLATE_ENV_FAIL', 'MAIL_FROM', 'MAIL_TO']:
+            if required not in config:
+                logger.error("Variable %s does not exist in %s and is mandatory!", required, tf_file)
+                return False
     if tf_variables_product_file != '':
         with open(tf_variables_product_file, 'r') as f:
             for line in f:
@@ -428,7 +435,7 @@ def main():
     if not os.path.isfile(args.tf):
         logger.error("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
         sys.exit(1)
-    config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
+    config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file, args.skip_variables_check)
     if not config:
         sys.exit(1)
     tf_vars = get_tf_vars()
