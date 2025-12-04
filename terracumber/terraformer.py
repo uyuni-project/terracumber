@@ -44,10 +44,16 @@ class Terraformer:
             copy(self.maintf, self.terraform_path + '/main.tf')
             if path.isfile(self.variables_description_file):
                 copy(self.variables_description_file, self.terraform_path + '/variables.tf')
+            # Use a new list to store processed filenames to avoid modifying the list while iterating
+            processed_tfvars = []
             for tfvars_file in self.tfvars_files:
-                copy(tfvars_file, self.terraform_path)
-                self.tfvars_files.append(path.basename(tfvars_file))
-
+                destination = path.join(self.terraform_path, path.basename(tfvars_file))
+                # Only copy if the source and destination are different files
+                if path.abspath(tfvars_file) != path.abspath(destination):
+                    copy(tfvars_file, self.terraform_path)
+                processed_tfvars.append(path.basename(tfvars_file))
+            # Update the class attribute with the list of local filenames
+            self.tfvars_files = processed_tfvars
             # Only if we are using a folder with folder structure used by sumaform
             if path.exists('%s/backend_modules/%s' % (path.abspath(self.terraform_path), self.backend)):
                 if path.islink('%s/modules/backend' % self.terraform_path):
