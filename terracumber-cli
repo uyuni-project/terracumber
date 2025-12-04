@@ -423,6 +423,7 @@ def saltshaker_run(args, tf_vars, ctl_creds, cmd):
 def main():
     """Main function"""
     args = parse_args()
+    tf_vars = get_tf_vars()
     if not args:
         sys.exit(1)
     template_data = {}
@@ -438,7 +439,6 @@ def main():
         config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
         if not config:
             sys.exit(1)
-        tf_vars = get_tf_vars()
         config = terracumber.utils.overwrite_dict(config, tf_vars)
     git_creds = get_git_credentials(args, tf_vars)
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
