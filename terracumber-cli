@@ -123,6 +123,12 @@ def parse_args():
         action='store_true',
         default=False
     )
+    parser.add_argument(
+        '--skip-variables-check',
+        help='Skip validation of mandatory configuration variables (URL_PREFIX, MAIL_*, etc.)',
+        action='store_true',
+        default=False
+    )
 
 
     args = parser.parse_args()
@@ -417,6 +423,7 @@ def saltshaker_run(args, tf_vars, ctl_creds, cmd):
 def main():
     """Main function"""
     args = parse_args()
+    tf_vars = get_tf_vars()
     if not args:
         sys.exit(1)
     template_data = {}
@@ -428,11 +435,11 @@ def main():
     if not os.path.isfile(args.tf):
         logger.error("ERROR: file %s from --tf argument does not exist or is not a file" % args.tf)
         sys.exit(1)
-    config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
-    if not config:
-        sys.exit(1)
-    tf_vars = get_tf_vars()
-    config = terracumber.utils.overwrite_dict(config, tf_vars)
+    if not args.skip_variables_check:
+        config = read_config(args.tf, args.tf_variables_description_file, args.tf_variables_product_file)
+        if not config:
+            sys.exit(1)
+        config = terracumber.utils.overwrite_dict(config, tf_vars)
     git_creds = get_git_credentials(args, tf_vars)
     # Pending: Make credentials and port configurable, and allow keypairs usage both from file
     # and agent (already supported by terraform.cucumber)
