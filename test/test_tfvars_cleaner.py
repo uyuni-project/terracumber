@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 from terracumber import tfvars_cleaner
 
 class TestTfvarsCleaner(unittest.TestCase):
