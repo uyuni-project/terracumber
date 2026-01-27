@@ -15,7 +15,7 @@ class TestTfvarsCleaner(unittest.TestCase):
     def test_to_hcl_lists(self):
         """Test HCL conversion for lists."""
         data = ["a", "b", 1]
-        expected = '["a", "b", "1"]' # integers in lists are converted to strings in the current implementation for safety/consistency if mixed
+        expected = '["a", "b", 1]'
         self.assertEqual(tfvars_cleaner.to_hcl(["a", "b"]), '["a", "b"]')
         self.assertEqual(tfvars_cleaner.to_hcl(data), expected)
 
