@@ -17,6 +17,7 @@ class TestTfvarsCleaner(unittest.TestCase):
         data = ["a", "b", 1]
         expected = '["a", "b", "1"]' # integers in lists are converted to strings in the current implementation for safety/consistency if mixed
         self.assertEqual(tfvars_cleaner.to_hcl(["a", "b"]), '["a", "b"]')
+        self.assertEqual(tfvars_cleaner.to_hcl(data), expected)
 
     def test_to_hcl_dictionaries(self):
         """Test HCL conversion for dictionaries (nested blocks)."""
