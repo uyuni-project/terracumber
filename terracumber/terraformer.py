@@ -2,6 +2,7 @@
 import fileinput
 from json import load, JSONDecodeError
 from os import environ, path, symlink, unlink
+import os
 from re import match, subn
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
@@ -88,17 +89,26 @@ class Terraformer:
                     replacement_list.append("\n}")
                     replacement = ''.join(replacement_list)
                     placeholder = f'//{node}_additional_repos'
-                    n_replaced = 0
-                    print(f"Checking entries in {self.terraform_path}/modules/build_validation/main.tf")
-                    for line in fileinput.input(f"{self.terraform_path}/modules/build_validation/main.tf", inplace=True):
-                        (new_line, n) = subn(placeholder, replacement, line)
-                        print(new_line, end='')
-                        n_replaced += n
-                    if n_replaced > 2:
-                        return 2
-                    elif n_replaced == 0:
-                        # not a fatal error, just trigger a warning when the return is checked
-                        return_code = 3
+                    
+                    main_tf_files = [
+                        f"{self.terraform_path}/main.tf",
+                        f"{self.terraform_path}/modules/build_validation/main.tf"
+                    ]
+
+                    for file_path in main_tf_files:
+                        if os.path.exists(file_path):
+                            n_replaced = 0
+
+                            for line in fileinput.input(file_path, inplace=True):
+                                (new_line, n) = subn(placeholder, replacement, line)
+                                print(new_line, end='')
+                                n_replaced += n
+                                
+                            if n_replaced > 2:
+                                return 2
+                            elif n_replaced == 0:
+                                # not a fatal error, just trigger a warning when the return is checked
+                                return_code = 3
 
         return return_code
 
