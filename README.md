@@ -2,7 +2,7 @@
 
 When [Terraform](https://www.terraform.io/) meets [Cucumber](https://cucumber.io/).
 
-This is exactly what [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](https://www.suse.com/products/suse-manager/) are using for part of the testing. We create an environment with terraform (sumaform) and then we run tests with Cucumber. Alternatively, terracumber can be also used to run Salt tests with [Salt Shaker](https://github.com/openSUSE/salt-test).
+This is exactly what [Uyuni](https://www.uyuni-project.org/) and [SUSE Multi-Linux Manager](https://www.suse.com/products/multi-linux-manager/) are using for part of the testing. We create an environment with terraform (sumaform) and then we run tests with Cucumber. Alternatively, terracumber can be also used to run Salt tests with [Salt Shaker](https://github.com/openSUSE/salt-test).
 
 Until [SUSE's Hackweek 18](https://hackweek.suse.com/projects/terracumber-python-replacement-for-sumaform-test-runner) we were using a set of bash scripts, completely ad-hoc and hard to maintain and extend, and that is how Terracumber was born.
 
@@ -33,12 +33,12 @@ No. It should work with any other environment as long as:
 ### Software requirements
 
 - Python 3
-- [pyhcl](https://pypi.org/project/pyhcl/) module installed
+- [python-hcl2](https://pypi.org/project/python-hcl2/) module installed
 - [paramiko](https://www.paramiko.org/) module installed
 - [pygit2](https://www.pygit2.org/) module installed
-- Terraform
+- Terraform/openTofu
 
-`paramiko` is usually part of the base system packages. `pyhcl` and `pygit2` are packaged in the [Uyuni utils](https://download.opensuse.org/repositories/systemsmanagement:/Uyuni:/Utils/) repository.
+`paramiko` is usually part of the base system packages. `python-hcl2` and `pygit2` are packaged in the [Uyuni utils](https://download.opensuse.org/repositories/systemsmanagement:/Uyuni:/Utils/) repository.
 
 Terraform must be configured as needed to run the terraform templates you are going to use.
 
@@ -55,7 +55,7 @@ You will need to create at least one `.tf` file to use it to launch your environ
 Keep in mind:
 
 1. There are some mandatory variables for the `.tf` file (see one of the [examples](examples/)
-2. You can add extra variables to your `.tf` file, so you can use it when creating the environment. Those variables will need to be exported before running `terracumber-cli` as `TF_VAR_`, as explained at the [terraform doc](https://learn.hashicorp.com/terraform/getting-started/variables.html#from-environment-variables). Our example adds SCC credentials to pass them to Uyuni/SUSE Manager, and GitHub credentials to use them to clone the GitHub cucumber repository **[1]**
+2. You can add extra variables to your `.tf` file, so you can use it when creating the environment. Those variables will need to be exported before running `terracumber-cli` as `TF_VAR_`, as explained at the [terraform doc](https://learn.hashicorp.com/terraform/getting-started/variables.html#from-environment-variables). Our example adds SCC credentials to pass them to Uyuni/SUSE Multi-Linux Manager, and GitHub credentials to use them to clone the GitHub cucumber repository **[1]**
 
 **[1]** To clone your terraform repository, it is allowed to use `TF_VAR_GIT_USER` and `TF_VAR_GIT_PASSWORD` instead of `--gituser` and `--gitpassword`, in case you do not want the credentials visible at the list of processes. If you use both the environment and the variables, then the parameters will be used to clone the terraform repository, and the variables to clone the cucumber repository at the controller.
 
