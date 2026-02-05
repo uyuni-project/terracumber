@@ -251,7 +251,7 @@ def run_terraform(args, tf_vars):
                 logger.error("ERROR: %s is not a well-formed JSON file", args.custom_repositories)
                 return False
             elif error == 2:
-                logger.error("ERROR: Make sure to have exactly 1 placeholder for additional repositories in %s", args.tf)
+                logger.error("ERROR: Make sure to have at most 2 placeholders for additional repositories in %s", args.tf)
                 return False
             elif error == 3:
                 logger.warning("WARNING: Proxy or server is missing the placeholder for additional repositories in %s", args.tf)
