@@ -1,12 +1,12 @@
 """Run and manage terraform"""
-import fileinput
-from json import load, JSONDecodeError
+from json import dump, load
 from os import environ, path, symlink, unlink
-import os
-from re import match, subn
+from re import match
+import re
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
-from .tfvars_cleaner import remove_unselected_tfvars_resources
+from .tfvars_cleaner import remove_unselected_tfvars_resources, to_hcl
+import hcl2
 
 # Fallback to allow running python3 -m unittest
 try:
@@ -64,53 +64,41 @@ class Terraformer:
 
             self.is_prepared = True  # Mark as prepared
 
-    def inject_repos(self, custom_repositories_json):
-        """Set additional repositories into the main.tf, so they are injected by sumaform
-
-        Returns:
-            0 if no error
-            1 if the json is not well-formed
-            2 if the main.tf has an incorrect number of placeholders
-        """
+    def inject_repos(self, custom_repositories: dict):
+        """Update existing tfvars in place, setting additional repositories for server and proxy, so they are injected by sumaform"""
         self.prepare_environment()  # Ensure environment is prepared
-        if custom_repositories_json:
-            try:
-                repos = load(custom_repositories_json)
-            except JSONDecodeError:
-                return 1
 
-            return_code = 0
-            for node in repos.keys():
-                if node == 'server' or node == 'proxy':
-                    node_mu_repos = repos.get(node, None)
-                    replacement_list = ["additional_repos = {"]
-                    for name, url in node_mu_repos.items():
-                        replacement_list.append(f'\n    "{name}" = "{url}"')
-                    replacement_list.append("\n}")
-                    replacement = ''.join(replacement_list)
-                    placeholder = f'//{node}_additional_repos'
-                    
-                    main_tf_files = [
-                        f"{self.terraform_path}/main.tf",
-                        f"{self.terraform_path}/modules/build_validation/main.tf"
-                    ]
+        json_to_hcl_map: dict[str, list[str]] = {
+            'server': ['server', 'server_containerized'],
+            'proxy': ['proxy', 'proxy_containerized']
+        }
 
-                    for file_path in main_tf_files:
-                        if os.path.exists(file_path):
-                            n_replaced = 0
+        for tfvars_file in self.tfvars_files:
+            local_path: str = path.join(self.terraform_path, tfvars_file)
+            with open(local_path, 'r') as f:
+                tfvars: dict = hcl2.load(f)
+                
+            env_config: dict = tfvars['ENVIRONMENT_CONFIGURATION']
+            updated: bool = False
+            
+            for json_key, tfvar_keys in json_to_hcl_map.items():
+                mu_repos: dict = custom_repositories.get(json_key)
+                if mu_repos:
+                    for k in tfvar_keys:
+                        if k in env_config:
+                            env_config[k]['additional_repos'] = mu_repos
+                            updated = True
+            
+            if not updated:
+                print(f"No custom repository was added to {tfvars_file}")
+                continue
 
-                            for line in fileinput.input(file_path, inplace=True):
-                                (new_line, n) = subn(placeholder, replacement, line)
-                                print(new_line, end='')
-                                n_replaced += n
-                                
-                            if n_replaced > 2:
-                                return 2
-                            elif n_replaced == 0:
-                                # not a fatal error, just trigger a warning when the return is checked
-                                return_code = 3
+            hcl_content: str = to_hcl(tfvars)
+            hcl_content = re.sub(r'}\n(\w)', r'}\n\n\1', hcl_content)
 
-        return return_code
+            with open(local_path, 'w') as f:
+                f.write(hcl_content)
+                f.write("\n") # Ensure EOF newline
 
     def init(self):
         self.prepare_environment()  # Ensure environment is prepared
