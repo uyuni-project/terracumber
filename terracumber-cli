@@ -244,17 +244,7 @@ def run_terraform(args, tf_vars):
                                                     args.sumaform_backend, tf_vars,
                                                     args.logfile, args.terraform_bin,
                                                     args.tf_variables_description_file, args.tf_configuration_files)
-    if args.custom_repositories:
-        with open(args.custom_repositories, 'r') as repos_file:
-            error = terraform.inject_repos(repos_file)
-            if error == 1:
-                logger.error("ERROR: %s is not a well-formed JSON file", args.custom_repositories)
-                return False
-            elif error == 2:
-                logger.error("ERROR: Make sure to have at most 2 placeholders for additional repositories in %s", args.tf)
-                return False
-            elif error == 3:
-                logger.warning("WARNING: Proxy or server is missing the placeholder for additional repositories in %s", args.tf)
+    
     if args.init:
         terraform.init()
     if args.taint:
