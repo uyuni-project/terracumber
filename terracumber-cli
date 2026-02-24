@@ -244,7 +244,7 @@ def run_terraform(args, tf_vars):
                                                     args.sumaform_backend, tf_vars,
                                                     args.logfile, args.terraform_bin,
                                                     args.tf_variables_description_file, args.tf_configuration_files)
-    
+
     if args.init:
         terraform.init()
     if args.taint:
