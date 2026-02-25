@@ -1,9 +1,7 @@
 """Run and manage terraform"""
-import fileinput
-from json import load, JSONDecodeError
+from json import load
 from os import environ, path, symlink, unlink
-import os
-from re import match, subn
+from re import match
 from shutil import copy
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 from .tfvars_cleaner import remove_unselected_tfvars_resources
@@ -63,54 +61,6 @@ class Terraformer:
                         '%s/modules/backend' % self.terraform_path)
 
             self.is_prepared = True  # Mark as prepared
-
-    def inject_repos(self, custom_repositories_json):
-        """Set additional repositories into the main.tf, so they are injected by sumaform
-
-        Returns:
-            0 if no error
-            1 if the json is not well-formed
-            2 if the main.tf has an incorrect number of placeholders
-        """
-        self.prepare_environment()  # Ensure environment is prepared
-        if custom_repositories_json:
-            try:
-                repos = load(custom_repositories_json)
-            except JSONDecodeError:
-                return 1
-
-            return_code = 0
-            for node in repos.keys():
-                if node == 'server' or node == 'proxy':
-                    node_mu_repos = repos.get(node, None)
-                    replacement_list = ["additional_repos = {"]
-                    for name, url in node_mu_repos.items():
-                        replacement_list.append(f'\n    "{name}" = "{url}"')
-                    replacement_list.append("\n}")
-                    replacement = ''.join(replacement_list)
-                    placeholder = f'//{node}_additional_repos'
-                    
-                    main_tf_files = [
-                        f"{self.terraform_path}/main.tf",
-                        f"{self.terraform_path}/modules/build_validation/main.tf"
-                    ]
-
-                    for file_path in main_tf_files:
-                        if os.path.exists(file_path):
-                            n_replaced = 0
-
-                            for line in fileinput.input(file_path, inplace=True):
-                                (new_line, n) = subn(placeholder, replacement, line)
-                                print(new_line, end='')
-                                n_replaced += n
-                                
-                            if n_replaced > 2:
-                                return 2
-                            elif n_replaced == 0:
-                                # not a fatal error, just trigger a warning when the return is checked
-                                return_code = 3
-
-        return return_code
 
     def init(self):
         self.prepare_environment()  # Ensure environment is prepared
