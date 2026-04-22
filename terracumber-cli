@@ -290,15 +290,18 @@ def get_results(args, tf_vars, config, ctl_creds):
     ctl_creds['hostname'] = ctl
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
     # Pending: Make the lists of files and directories part of the tf file
-    files = ['output.*\.html', 'output.*\.json', 'spacewalk-debug\.tar\.bz2']
+    downloaded = cucumber.get_by_extensions(
+        config['CUCUMBER_RESULTS'], args.outputdir, ['.html', '.json'])
+    if not downloaded:
+        logger.warning("No .html or .json files found in %s at %s!",
+                       config['CUCUMBER_RESULTS'], ctl_creds['hostname'])
+    try:
+        cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], r'spacewalk-debug\.tar\.bz2'),
+                     '%s' % args.outputdir)
+    except FileNotFoundError:
+        logger.warning("Nothing matched %s/%s at %s!", config['CUCUMBER_RESULTS'],
+                       'spacewalk-debug.tar.bz2', ctl_creds['hostname'])
     directories = ['screenshots', 'cucumber_report', 'logs', 'results_junit']
-    for copyfile in files:
-        try:
-            cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], copyfile),
-                         '%s' % args.outputdir)
-        except FileNotFoundError:
-            logger.warning("Nothing matched %s/%s at %s!", config['CUCUMBER_RESULTS'],
-                           copyfile, ctl_creds['hostname'])
     for copydir in directories:
         try:
             cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
