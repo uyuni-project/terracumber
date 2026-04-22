@@ -1,5 +1,4 @@
 from terracumber import cucumber
-import os
 import stat
 import unittest
 from unittest.mock import MagicMock, patch

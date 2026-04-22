@@ -103,18 +103,21 @@ class Cucumber:
         """
         downloaded = []
         sftp_client = self.ssh_client.open_sftp()
-        for entry in sftp_client.listdir_attr(remotedir):
-            if not stat.S_ISREG(entry.st_mode):
-                continue
-            _, ext = os.path.splitext(entry.filename)
-            if ext not in extensions:
-                continue
-            remote_path = remotedir.rstrip('/') + '/' + entry.filename
-            local_path = localdir.rstrip('/') + '/' + entry.filename
-            sftp_client.get(remote_path, local_path)
-            self.copy_atime_mtime(remote_path, local_path)
-            downloaded.append(remote_path)
-        return downloaded
+        try:
+            for entry in sftp_client.listdir_attr(remotedir):
+                if not stat.S_ISREG(entry.st_mode):
+                    continue
+                _, ext = os.path.splitext(entry.filename)
+                if ext not in extensions:
+                    continue
+                remote_path = remotedir.rstrip('/') + '/' + entry.filename
+                local_path = localdir.rstrip('/') + '/' + entry.filename
+                sftp_client.get(remote_path, local_path)
+                self.copy_atime_mtime(remote_path, local_path)
+                downloaded.append(remote_path)
+            return downloaded
+        finally:
+            sftp_client.close()
 
     def put_file(self, localpath, remotepath):
         """Put a file in the controller
