@@ -1,6 +1,7 @@
 from terracumber import cucumber
+import stat
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 class TestCucumber(unittest.TestCase):
@@ -83,6 +84,39 @@ class TestCucumber(unittest.TestCase):
         self.cucumber = cucumber.Cucumber(self.conn_data)
         self.cucumber.close()
         mock_sshclient.return_value.close.assert_called_once()
+
+    @patch('terracumber.cucumber.paramiko.SSHClient')
+    @patch('terracumber.cucumber.Cucumber.copy_atime_mtime')
+    def test_get_by_extensions(self, mock_copy_atime_mtime, mock_sshclient):
+        def make_entry(name, is_dir=False):
+            e = MagicMock()
+            e.filename = name
+            e.st_mode = stat.S_IFDIR if is_dir else stat.S_IFREG
+            return e
+
+        self.cucumber = cucumber.Cucumber(self.conn_data)
+        mock_sftp = mock_sshclient.return_value.open_sftp.return_value
+
+        # Downloads .html and .json, skips .txt and subdirectories
+        mock_sftp.listdir_attr.return_value = [
+            make_entry('output_core.html'),
+            make_entry('output_core.json'),
+            make_entry('notes.txt'),
+            make_entry('subdir', is_dir=True),
+        ]
+        result = self.cucumber.get_by_extensions('/remote/results', '/local/out', ['.html', '.json'])
+        self.assertEqual(sorted(result), sorted([
+            '/remote/results/output_core.html',
+            '/remote/results/output_core.json',
+        ]))
+        self.assertEqual(mock_sftp.get.call_count, 2)
+
+        # Empty directory returns empty list
+        mock_sftp.reset_mock()
+        mock_sftp.listdir_attr.return_value = []
+        result = self.cucumber.get_by_extensions('/remote/results', '/local/out', ['.html', '.json'])
+        self.assertEqual(result, [])
+        mock_sftp.get.assert_not_called()
 
 
 if __name__ == '__main__':

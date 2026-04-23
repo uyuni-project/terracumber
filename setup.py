@@ -9,7 +9,7 @@ setup(
     description="When Terraform meets Cucumber.",
     long_description=open("README.md").read(),
     install_requires=[
-        "python-hcl2",
+        "python-hcl2<8.0",
         "paramiko",
         "pygit2",
     ],

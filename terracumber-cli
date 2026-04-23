@@ -284,28 +284,40 @@ def get_bastion_hostname(args, tf_vars):
         return None
 
 
-def get_results(args, tf_vars, config, ctl_creds):
+def get_results(args, tf_vars, config, ctl_creds, build_number):
     """ Get results from the controller after a cucumber execution """
     ctl = get_controller_hostname(args, tf_vars)
     ctl_creds['hostname'] = ctl
     cucumber = terracumber.cucumber.Cucumber(ctl_creds, False, 'AutoAddPolicy')
     # Pending: Make the lists of files and directories part of the tf file
-    files = ['output.*\.html', 'output.*\.json', 'spacewalk-debug\.tar\.bz2']
+    downloaded = cucumber.get_by_extensions(
+        config['CUCUMBER_RESULTS'], args.outputdir, ['.html', '.json'])
+    if not downloaded:
+        logger.warning("No .html or .json files found in %s at %s!",
+                       config['CUCUMBER_RESULTS'], ctl_creds['hostname'])
+    try:
+        cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], r'spacewalk-debug\.tar\.bz2'),
+                     '%s' % args.outputdir)
+    except FileNotFoundError:
+        logger.warning("Nothing matched %s/%s at %s!", config['CUCUMBER_RESULTS'],
+                       'spacewalk-debug.tar.bz2', ctl_creds['hostname'])
     directories = ['screenshots', 'cucumber_report', 'logs', 'results_junit']
-    for copyfile in files:
-        try:
-            cucumber.get('%s/%s' % (config['CUCUMBER_RESULTS'], copyfile),
-                         '%s' % args.outputdir)
-        except FileNotFoundError:
-            logger.warning("Nothing matched %s/%s at %s!", config['CUCUMBER_RESULTS'],
-                           copyfile, ctl_creds['hostname'])
     for copydir in directories:
         try:
+            logger.info("Copying directory %s/%s to %s/%s", config['CUCUMBER_RESULTS'], copydir, args.outputdir, copydir)
             cucumber.get_recursive('%s/%s' % (config['CUCUMBER_RESULTS'], copydir),
                                    '%s/%s' % (args.outputdir, copydir))
         except FileNotFoundError:
             logger.warning("Remote directory %s/%s did not exist!", config['CUCUMBER_RESULTS'],
                            copydir)
+    # Copy results directory from build-specific location
+    try:
+        results_remote_path = '%s/results/%s' % (config['CUCUMBER_RESULTS'], build_number)
+        logger.info("Copying results directory %s to %s/results", results_remote_path, args.outputdir)
+        cucumber.get_recursive(results_remote_path, '%s/results' % args.outputdir)
+    except FileNotFoundError:
+        logger.warning("Remote results directory %s/results/%s did not exist!", config['CUCUMBER_RESULTS'],
+                       build_number)
     return True
 
 
@@ -491,7 +503,7 @@ def main():
 
     if (args.runall and results['output-tests']) or args.runstep == 'getresults':
         logger.info("Fetching files from controller to %s...", args.outputdir)
-        results['results'] = get_results(args, tf_vars, config, ctl_creds)
+        results['results'] = get_results(args, tf_vars, config, ctl_creds, template_data['timestamp'])
 
     if args.runstep == 'saltshaker_getresults':
         logger.info("Fetching files from Salt Shaker node to %s...", args.outputdir)
