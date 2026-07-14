@@ -8,33 +8,33 @@ logger = logging.getLogger(__name__)
 
 def to_hcl(obj, indent_level=0):
     """
-    Recursively converts a Python object to an HCL string.
+    Recursively converts a Python object to an HCL string using structural pattern matching.
     """
     indent = "  " * indent_level
-    if isinstance(obj, dict):
-        lines = []
-        for key, value in obj.items():
-            # Recursively format the value
-            formatted_value = to_hcl(value, indent_level + 1)
+    match obj:
+        case dict():
+            lines = []
+            for key, value in obj.items():
+                formatted_value = to_hcl(value, indent_level + 1)
 
-            # If the value is a dictionary, we format it as a block: key = { ... }
-            if isinstance(value, dict):
-                lines.append(f"{indent}{key} = {{\n{formatted_value}\n{indent}}}")
-            else:
-                lines.append(f"{indent}{key} = {formatted_value}")
-        return "\n".join(lines)
-    elif isinstance(obj, list):
-        items = [to_hcl(item, 0) for item in obj]
-        return f"[{', '.join(items)}]"
-    elif isinstance(obj, str):
-        safe_str = obj.replace('"', '\\"')
-        return f'"{safe_str}"'
-    elif isinstance(obj, bool):
-        return str(obj).lower()  # True -> true
-    elif obj is None:
-        return "null"
-    else:
-        return str(obj)
+                if isinstance(value, dict):
+                    lines.append(f"{indent}{key} = {{\n{formatted_value}\n{indent}}}")
+                else:
+                    lines.append(f"{indent}{key} = {formatted_value}")
+            return "\n".join(lines)
+        case list():
+            items = [to_hcl(item, 0) for item in obj]
+            return f"[{', '.join(items)}]"
+        case str():
+            safe_str = obj.replace('"', '\\"')
+            return f'"{safe_str}"'
+        case bool():
+            return str(obj).lower()
+        case None:
+            return "null"
+        case _:
+            # This is the 'else' or wildcard case
+            return str(obj)
 
 def get_default_keep_list(env_config, delete_all):
     """
