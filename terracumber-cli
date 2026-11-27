@@ -97,9 +97,9 @@ def parse_args():
                         dest='custom_repositories', default=None)
     # I think this is sumaform specific, in the future we should
     parser.add_argument('--sumaform-backend', help="""sumaform backend to be used. Only valid when using
-                                                      sumaformn. Possible values are libvirt, aws or null.
+                                                      sumaformn. Possible values are libvirt, aws, azure or null.
                                                       libvirt is used by default""",
-                        choices=['libvirt', 'aws', 'null'], default="libvirt",
+                        choices=['libvirt', 'aws', 'azure', 'null'], default="libvirt",
                         dest='sumaform_backend')
     parser.add_argument('--bastion_ssh_key', help="""Bastion key to be use""", dest='bastion_ssh_key', default=None)
     parser.add_argument('--bastion_user', help="""Bastion user to be use""", dest='bastion_user', default='ec2-user')
